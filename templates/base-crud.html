@@ -23,6 +23,17 @@
     <!-- MENSAJES DE DJANGO (éxito / error / info) -->
     {% block extra_messages %}{% endblock %}
 
+    
+    <!-- Mensajes de Django -->
+    {% if messages %}
+        <section class="messages">
+            {% for message in messages %}
+                <div class="message">
+                    <h1>{{ message }}</h1>
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
 
     <!-- Header principal -->
     <header class="main-header">

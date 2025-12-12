@@ -25,6 +25,15 @@
 
     
     
+    {% if messages %}
+        <section class="messages">
+            {% for message in messages %}
+                <div class="message">
+                    <h1>{{ message }}</h1>
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
 
     <!-- Encabezado principal donde va el TÍTULO y el BOTÓN VOLVER -->
     <header>
