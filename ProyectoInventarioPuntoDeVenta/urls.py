@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from LoginApp.views import renderlogin as Login
 from AdminHomeApp import views as AdminHomeApp
+from CrudBodegasApp import views
 
 # Lista de rutas principales de la aplicación Django
 urlpatterns = [
@@ -37,5 +38,7 @@ urlpatterns = [
     # Ruta para el home general de la aplicación
     # Todas las URLs definidas en HomeApp.urls se incluirán bajo /home/
     path('home/', include("HomeApp.urls")),
+
+    path('bodegas/', include('CrudBodegasApp.urls')),
 ]
 

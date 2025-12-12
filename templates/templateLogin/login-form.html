@@ -21,7 +21,6 @@
         </section>
     {% endif %}
 
-    <!-- TODO JUNTO AQUÍ -->
     <div class="login-container">
 
         <header>
@@ -30,8 +29,18 @@
 
         <form method="POST" novalidate>
             {% csrf_token %}
-            {{ form.as_div }}
-            <input class="form-enviar" type="submit" value="ENVIAR">
+
+            <div class="form-group">
+                <label for="UsernameField">Usuario</label>
+                <input type="text" id="UsernameField" name="UsernameField" required placeholder="Ingrese su usuario">
+            </div>
+
+            <div class="form-group">
+                <label for="PasswordField">Contraseña</label>
+                <input type="password" id="PasswordField" name="PasswordField" required placeholder="Ingrese su contraseña">
+            </div>
+
+            <input class="form-enviar" type="submit" value="INGRESAR">
         </form>
 
     </div>

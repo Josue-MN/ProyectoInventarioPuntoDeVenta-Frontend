@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load static %} <!-- Carga la etiqueta 'static' de Django para gestionar archivos estáticos -->
+{% load static %}
 
 <html lang="es">
 <head>
@@ -8,36 +8,28 @@
     
     <link rel="stylesheet" href="{% static 'css/models-style.css' %}">
     
-    <!-- Bloque de título dinámico que puede ser sobrescrito en cada página -->
     <title>{% block title %}{% endblock %}</title>
 </head>
 
 <body>
 
-    <!-- Barra de navegación (breadcrumbs) para mostrar la ruta dentro del sistema -->
+    <!-- Barra de navegación (breadcrumbs) -->
     <nav>
         <ol>
-            {% block breadcrumb %}{% endblock %} <!-- Bloque dinámico para ruta de navegación -->
+            {% block breadcrumb %}{% endblock %}
         </ol>
     </nav>
-    
-    <!-- Sección de mensajes de feedback (éxito, error o información) -->
-    {% if messages %}
-        <section class="messages">
-            {% for message in messages %}
-                <div class="message">
-                    <h1>{{ message }}</h1> <!-- Muestra el contenido de cada mensaje -->
-                </div>
-            {% endfor %}
-        </section>
-    {% endif %}
 
-    <!-- Header principal de la página -->
+    <!-- MENSAJES DE DJANGO (éxito / error / info) -->
+    {% block extra_messages %}{% endblock %}
+
+
+    <!-- Header principal -->
     <header class="main-header">
-        {% block header_title %}{% endblock %} <!-- Bloque dinámico para el título de la sección -->
+        {% block header_title %}{% endblock %}
     </header>
 
-    <!-- Bloque principal de contenido dinámico, como tablas de datos -->
+    <!-- Contenido dinámico (tablas, listas, detalles) -->
     {% block content %}{% endblock %}
 
 </body>

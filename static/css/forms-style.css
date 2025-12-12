@@ -210,3 +210,12 @@ section message {
     font-size: 17px;
     text-align: center;
 }
+
+
+textarea.input-text {
+    padding-top: 1px;
+    padding-left: 1px;
+    min-height: 120px;  /* Ajusta el tamaño vertical */
+    padding: 12px;      /* Espacio interno */
+    resize: vertical;   /* Permite redimensionar solo vertical (opcional) */
+}

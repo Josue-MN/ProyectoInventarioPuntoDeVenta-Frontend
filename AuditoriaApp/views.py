@@ -3,9 +3,7 @@
 from django.shortcuts import render
 # Importa el modelo AuditoriaBodega, que representa la tabla donde se guardan
 # los registros de auditoría (qué pasó, en qué bodega, quién lo hizo, cuándo, etc.).
-from AuditoriaApp.models import AuditoriaBodega, AuditoriaCargo, AuditoriaCategoria, AuditoriaEmpleado, AuditoriaProducto, AuditoriaUsuario
 # Importa el modelo Usuarios para poder buscar al usuario logueado en la base de datos.
-from CrudUsuariosApp.models import Usuarios
 # Importa el decorador "solo_admin" desde la aplicación LoginApp.
 # Este decorador sirve para restringir el acceso a ciertas vistas,
 # permitiendole solo el ingreso de usuarios que tengan rol de administrador.

@@ -1,52 +1,140 @@
 {% extends 'base-form.html' %}
-<!-- Hereda la estructura y los estilos desde la plantilla base para formularios (base-form.html) -->
+{% load static %}
 
 {% block title %}Registro de Bodega{% endblock %}
-<!-- Define el título de la página que se mostrará en la pestaña del navegador -->
 
 {% block breadcrumb %}
-<!-- Sección de navegación (migas de pan) que indica la ruta actual dentro del sistema -->
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a href="{% url 'admin-crud-bodega' %}">Crud Bodegas > </a>
-            <a>Formulario bodega</a>
-        {% else %}
-            <a href="{% url 'home' %}">Home ></a>
-            <a href="{% url 'crud-bodega' %}">Crud Bodegas > </a>
-            <a>Formulario bodega</a>
-        {% endif %}
-    </li>
+<li>
+    {% if request.session.Usuario_Username == "Admin" %}
+        <a href="{% url 'adminhome' %}">Panel Admin ></a>
+        <a href="{% url 'admin-crud-bodega' %}">Crud Bodegas > </a>
+        <a>Formulario bodega</a>
+    {% else %}
+        <a href="{% url 'home' %}">Home ></a>
+        <a href="{% url 'crud-bodega' %}">Crud Bodegas > </a>
+        <a>Formulario bodega</a>
+    {% endif %}
+</li>
 {% endblock %}
 
-<!-- Título principal que se muestra en la parte superior de la página -->
+{% block extra_messages %}
+{% if errores %}
+<section class="messages">
+    <div class="message">
+        <h1>Corrige los errores en el formulario antes de continuar</h1>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
 {% block header_title %}
-    <h1 class="header-title">REGISTRO DE BODEGAS</h1>
-    <!-- Botón que permite volver a la vista del CRUD de bodegas -->
-    {% if request.session.Usuario_Username == "Admin" %}
-        <a href="{% url 'admin-crud-bodega' %}">
-            <button class="button-header" type="button">Volver</button>
-        </a>
-    {% else %}
-        <a href="{% url 'crud-bodega' %}">
-            <button class="button-header" type="button">Volver</button>
-        </a>
-    {% endif %}
-    
+<h1 class="header-title">REGISTRO DE BODEGAS</h1>
+
+{% if request.session.Usuario_Username == "Admin" %}
+    <a href="{% url 'admin-crud-bodega' %}">
+        <button class="button-header" type="button">Volver</button>
+    </a>
+{% else %}
+    <a href="{% url 'crud-bodega' %}">
+        <button class="button-header" type="button">Volver</button>
+    </a>
+{% endif %}
 {% endblock %}
-    
+
 {% block content %}
-<!-- Contenido principal de la página: el formulario de registro de bodegas -->
-    <form method="POST" novalidate>
-        {% csrf_token %}
-        <!-- Token de seguridad de Django para prevenir ataques CSRF -->
-        
-        {{ form.as_div }}
-        <!-- Renderiza automáticamente los campos del formulario dentro de etiquetas <div> -->
-        
-        <!-- Botón de envío con confirmación antes de enviar los datos -->
-        <input class="form-enviar" type="submit" value="ENVIAR" 
-            onclick="return confirm('¿Seguro que deseas enviar estos datos?')">
-    </form>
+<form method="POST" novalidate>
+    {% csrf_token %}
+
+    <!-- ================================ -->
+    <!-- NOMBRE DE LA BODEGA -->
+    <!-- ================================ -->
+    <div class="form-group">
+
+        <label for="NombreBodega">Nombre de la bodega:</label>
+        <div class="form-help">Ingrese el nombre de la bodega</div>
+
+        {% if errores.NombreBodega %}
+            <div class="field-error">• {{ errores.NombreBodega.0 }}</div>
+        {% endif %}
+
+        <input 
+            type="text"
+            name="NombreBodega"
+            id="NombreBodega"
+            placeholder="Ej: Bodega norte"
+            class="input-text"
+            value="{{ data.NombreBodega|default:'' }}"
+        >
+    </div>
+
+    <!-- ================================ -->
+    <!-- UBICACIÓN DE LA BODEGA -->
+    <!-- ================================ -->
+    <div class="form-group">
+
+        <label for="UbicacionBodega">Ubicación de la bodega:</label>
+        <div class="form-help">Indique la ubicación de la bodega</div>
+
+        {% if errores.UbicacionBodega %}
+            <div class="field-error">• {{ errores.UbicacionBodega.0 }}</div>
+        {% endif %}
+
+        <input 
+            type="text"
+            name="UbicacionBodega"
+            id="UbicacionBodega"
+            placeholder="Ej: Primer piso"
+            class="input-text"
+            value="{{ data.UbicacionBodega|default:'' }}"
+        >
+    </div>
+
+    <!-- ================================ -->
+    <!-- ESTADO -->
+    <!-- ================================ -->
+    <div class="form-group">
+
+        <label for="EstadoBodega">Estado de la bodega:</label>
+        <div class="form-help">
+            Seleccione el estado actual de la bodega (Activa, Inactiva o En Mantenimiento)
+        </div>
+
+        {% if errores.EstadoBodega %}
+            <div class="field-error">• {{ errores.EstadoBodega.0 }}</div>
+        {% endif %}
+
+        <select name="EstadoBodega" id="EstadoBodega" class="input-text">
+            <option value="Seleccione…">Seleccione…</option>
+            <option value="Activa" {% if data.EstadoBodega == "Activa" %}selected{% endif %}>Activa</option>
+            <option value="Inactiva" {% if data.EstadoBodega == "Inactiva" %}selected{% endif %}>Inactiva</option>
+            <option value="En Mantenimiento" {% if data.EstadoBodega == "En Mantenimiento" %}selected{% endif %}>En Mantenimiento</option>
+        </select>
+    </div>
+
+    <hr>
+
+    <!-- ================================ -->
+    <!-- OBSERVACIONES -->
+    <!-- ================================ -->
+    <div class="form-group">
+
+        <label for="ObservacionesBodega">Observaciones sobre la bodega:</label>
+        <div class="form-help">Ingrese detalles adicionales o notas relevantes sobre la bodega</div>
+
+        {% if errores.ObservacionesBodega %}
+            <div class="field-error">• {{ errores.ObservacionesBodega.0 }}</div>
+        {% endif %}
+
+        <textarea 
+            name="ObservacionesBodega"
+            id="ObservacionesBodega"
+            placeholder="Ej: Se utiliza para productos perecibles o de rotación rápida."
+            class="input-text"
+        >{{ data.ObservacionesBodega|default:'' }}</textarea>
+
+    </div>
+
+    <input class="form-enviar" type="submit" value="ENVIAR">
+
+</form>
 {% endblock %}
-<!-- Fin del bloque de contenido -->

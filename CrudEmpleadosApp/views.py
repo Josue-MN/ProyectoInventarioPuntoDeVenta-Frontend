@@ -1,7 +1,5 @@
 # Importaciones necesarias
 from django.shortcuts import render, redirect  # 'render' para mostrar templates y 'redirect' para redirigir a otra URL
-from CrudEmpleadosApp.models import Empleados  # Importa el modelo Empleados desde la app CrudEmpleadosApp
-from . import forms  # Importa los formularios definidos en forms.py de la misma app
 from django.contrib import messages
 from AuditoriaApp.views import RegistrarAuditoriaEmpleado
 from LoginApp.decorators import solo_admin

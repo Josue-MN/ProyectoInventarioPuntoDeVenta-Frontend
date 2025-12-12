@@ -1,6 +1,4 @@
 from django.shortcuts import render, redirect
-from CrudCargosApp.models import Cargos
-from . import forms
 from django.contrib import messages
 from AuditoriaApp.views import RegistrarAuditoriaCargo
 from LoginApp.decorators import solo_admin

@@ -1,6 +1,4 @@
 from django.shortcuts import render, redirect
-from CrudCategoriaProductoApp.models import CategoriaProducto
-from . import forms
 from django.contrib import messages
 from AuditoriaApp.views import RegistrarAuditoriaCategoria
 from LoginApp.decorators import login_requerido

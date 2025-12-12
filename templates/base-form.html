@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load static %} <!-- Carga la etiqueta 'static' de Django para manejar archivos estáticos -->
+{% load static %}
 
 <html lang="en">
 <head>
@@ -8,38 +8,31 @@
     
     <link rel="stylesheet" href="{% static 'css/forms-style.css' %}">
     
-    <!-- Bloque de título dinámico que se puede sobrescribir en otras plantillas -->
     <title>{% block title %}{% endblock %}</title>
 </head>
 
 <body>
     
-    <!-- Barra de navegación (breadcrumbs) -->
+    <!-- Breadcrumb -->
     <nav>
         <ol>
-            {% block breadcrumb %}{% endblock %} <!-- Bloque dinámico para la ruta de navegación -->
+            {% block breadcrumb %}{% endblock %}
         </ol>
     </nav>
-    
-    <!-- Sección para mostrar mensajes de feedback (éxito, error, información) -->
-    {% if messages %}
-        <section class="messages">
-            {% for message in messages %}
-                <div class="message">
-                    <h1>{{ message }}</h1> <!-- Muestra el contenido de cada mensaje -->
-                </div>
-            {% endfor %}
-        </section>
-    {% endif %}
 
-    <!-- Encabezado principal de la página -->
+    <!-- MENSAJES DE DJANGO (éxito / error / info) -->
+    {% block extra_messages %}{% endblock %}
+
+    
+    
+
+    <!-- Encabezado principal donde va el TÍTULO y el BOTÓN VOLVER -->
     <header>
-        {% block header_title %}{% endblock %} <!-- Bloque dinámico para título de sección o página -->
+        {% block header_title %}{% endblock %}
     </header>
 
-    <!-- Bloque principal de contenido dinámico, como formularios o tablas -->
+    <!-- Contenido: aquí va el FORMULARIO -->
     {% block content %}{% endblock %}
     
 </body>
 </html>
-

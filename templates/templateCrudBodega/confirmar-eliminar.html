@@ -1,58 +1,47 @@
 {% extends 'base-crud.html' %}
-<!-- Extiende la plantilla base de CRUD, heredando estilos, scripts y estructura general -->
 
-{% block title %}Confirmar eliminacion de bodega{% endblock %}
-<!-- Título de la página que aparece en la pestaña del navegador -->
+{% block title %}Confirmar Eliminación de Bodega{% endblock %}
 
 {% block breadcrumb %}
-    <!-- Breadcrumb para mostrar la navegación jerárquica -->
     <li>
         {% if request.session.Usuario_Username == "Admin" %}
             <a href="{% url 'adminhome' %}">Panel Admin ></a>
             <a href="{% url 'admin-crud-bodega' %}">Crud Bodegas > </a>
-            <a>Confirmar Eliminacion</a>
+            <a>Confirmar Eliminación</a>
         {% else %}
             <a href="{% url 'home' %}">Home ></a>
             <a href="{% url 'crud-bodega' %}">Crud Bodegas > </a>
-            <a>Confirmar Eliminacion</a>
+            <a>Confirmar Eliminación</a>
         {% endif %}
     </li>
 {% endblock %}
 
 {% block header_title %}
-    <!-- Título principal de la página -->
     <h1 class="header-title">CONFIRMACION DE ELIMINACION</h1>
 {% endblock %}
 
 {% block content %}
-    <section>
-        <!-- Pregunta de confirmación mostrando el nombre de la bodega -->
-        <h1>¿Seguro que deseas eliminar la bodega: {{ bod.NombreBodega }} ?</h1>
-        
-        <!-- Botón para volver al listado de bodegas -->
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'admin-crud-bodega' %}">
-                <button class="button-header" type="button">Volver</button>
-            </a>
-        {% else %}
-            <a href="{% url 'crud-bodega' %}">
-                <button class="button-header" type="button">Volver</button>
-            </a>
-        {% endif %}
+<section>
+    <h1>¿Seguro que deseas eliminar la bodega: {{ bod.NombreBodega }}?</h1>
 
-        <!-- Formulario para enviar la eliminación vía POST -->
-        <form method="POST" 
-            action="
-                {% if request.session.Usuario_Username == "Admin" %}
-                    {% url 'admin-eliminar-bodega' bod.IdBodega %}
-                {% else %}
-                    {% url 'eliminar-bodega' bod.IdBodega %}
-                {% endif %}
-            ">
-            {% csrf_token %} <!-- Token de seguridad obligatorio en Django -->
-            <button type="submit">ELIMINAR</button>
-        </form>
-    </section>
+    {% if request.session.Usuario_Username == "Admin" %}
+        <a href="{% url 'admin-crud-bodega' %}">
+            <button class="button-header">Volver</button>
+        </a>
+    {% else %}
+        <a href="{% url 'crud-bodega' %}">
+            <button class="button-header">Volver</button>
+        </a>
+    {% endif %}
+
+    <form method="POST"
+          action="{% if request.session.Usuario_Username == 'Admin' %}
+                      {% url 'admin-eliminar-bodega' bod.IdBodega %}
+                  {% else %}
+                      {% url 'eliminar-bodega' bod.IdBodega %}
+                  {% endif %}">
+        {% csrf_token %}
+        <button type="submit">ELIMINAR</button>
+    </form>
+</section>
 {% endblock %}
-
-    

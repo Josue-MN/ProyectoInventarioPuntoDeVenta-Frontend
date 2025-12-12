@@ -1,7 +1,5 @@
 # Importaciones necesarias
 from django.shortcuts import render, redirect  # 'render' para mostrar templates y 'redirect' para redirigir
-from CrudProductosApp.models import Productos  # Importa el modelo Producto
-from . import forms  # Importa los formularios de la app CrudProductosApp
 from django.contrib import messages
 from AuditoriaApp.views import RegistrarAuditoriaProducto
 from LoginApp.decorators import login_requerido

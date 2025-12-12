@@ -13,7 +13,6 @@ from django.core.validators import MinLengthValidator, MinValueValidator
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from CrudCategoriaProductoApp.models import CategoriaProducto #Se importa el models para hacer uso de la llave foranea
-from CrudBodegasApp.models import Bodegas
 
 # ========================================================================
 # Modelo: Productos

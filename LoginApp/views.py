@@ -1,48 +1,53 @@
+import requests
 from django.shortcuts import render, redirect
-from . import forms
-from CrudUsuariosApp.models import Usuarios
 from django.contrib import messages
-from django.contrib.auth.hashers import check_password
-# Create your views here.
+
+API_LOGIN_URL = "http://127.0.0.1:8000/api/token/"
 
 
-#ESTA VIEW PERMITE RENDERIZAR EL TEMPLATES DE LOGIN
 def renderlogin(request):
-    # Renderiza y devuelve el template de login al navegador
     return render(request, 'templateLogin/login.html')
 
 
 def renderLoginForm(request):
-    form = forms.LoginForm(request.POST)
-    data = {'form': form}
+    if request.method == "POST":
+        username = request.POST.get("UsernameField")
+        password = request.POST.get("PasswordField")
 
-    if request.method == 'POST':
-        UsernameInput = request.POST['UsernameField']
-        PasswordInput = request.POST['PasswordField']
+        # Datos a enviar a la API
+        data = {
+            "username": username,
+            "password": password
+        }
 
-        try:
-            UsuarioRecuperado = Usuarios.objects.get(Username=UsernameInput)
-        except Usuarios.DoesNotExist:
-            messages.error(request, "Contraseña o identificador de usuario incorrectos. Escriba la contraseña y el identificador de usuario correctos e inténtelo de nuevo.")
-            return render(request, 'templateLogin/login-form.html', data)
+        # Enviar request al backend (API)
+        response = requests.post(API_LOGIN_URL, data=data)
 
-        if check_password(PasswordInput, UsuarioRecuperado.Password):
-            print("Loggeo Correcto")
+        # Si la API dice que las credenciales son correctas
+        if response.status_code == 200:
+            json_data = response.json()
+            access_token = json_data.get("access")
 
-            request.session['Usuario_Username'] = UsuarioRecuperado.Username
+            if not access_token:
+                messages.error(request, "La API no devolvió un token de acceso.")
+                return render(request, "templateLogin/login-form.html")
 
-            UsuarioLogeado = request.session.get('Usuario_Username')
-            print(UsuarioLogeado)
+            # Guardar token en sesión
+            request.session["token"] = access_token
+            request.session["Usuario_Username"] = username
 
-            if UsuarioLogeado == "Admin":
-                return redirect('adminhome/')
+            # Behavior personalizado
+            if username.lower() == "admin":
+                return redirect("adminhome")
             else:
-                return redirect('home/')
-            
-        else:
-            messages.error(request, "Contraseña o identificador de usuario incorrectos. Escriba la contraseña y el identificador de usuario correctos e inténtelo de nuevo.")
+                return redirect("home")
 
-    return render(request, 'templateLogin/login-form.html', data)
+        # Si la API responde error de credenciales
+        messages.error(request, "Usuario o contraseña incorrectos.")
+        return render(request, "templateLogin/login-form.html")
+
+    # Si entra por GET, mostrar formulario normal
+    return render(request, "templateLogin/login-form.html")
 
 
 def renderLogout(request):
