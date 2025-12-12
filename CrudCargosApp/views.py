@@ -1,8 +1,25 @@
+import requests
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from AuditoriaApp.views import RegistrarAuditoriaCargo
-from LoginApp.decorators import solo_admin
-# Importante: se asume que ya se importaron forms, messages, redirect y render
+from LoginApp.decorators import login_requerido, solo_admin
+
+API_URL = "http://127.0.0.1:8000/bodegas/"
+
+# ----------------------------------------------------------
+# FUNCIÓN PARA OBTENER HEADERS CON TOKEN
+# ----------------------------------------------------------
+def get_headers(request):
+    token = request.session.get("token")
+
+    # Si no hay token, no pedirá nada a la API
+    if not token:
+        return {}
+
+    return {
+        "Authorization": f"Bearer {token}"
+    }
+
+
 
 # Vista para mostrar todos los cargos en una tabla/listado
 @solo_admin

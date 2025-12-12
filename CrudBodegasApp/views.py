@@ -115,17 +115,23 @@ def detalleBodega(request, IdBodega):
 # ----------------------------------------------------------
 @login_requerido
 def actualizarBodega(request, IdBodega):
-
     headers = get_headers(request)
 
-    # Obtener datos actuales
-    response = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
-    if response.status_code == 200:
-        bodega = response.json()
-    else:
-        messages.error(request, "No se pudo obtener la bodega desde la API.")
-        return redirect("crud-bodega")
+    # GET → Obtener datos actuales y mostrar en el formulario
+    if request.method == "GET":
+        response = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
+        if response.status_code == 200:
+            bodega = response.json()
+        else:
+            messages.error(request, "No se pudo obtener la bodega desde la API.")
+            return redirect("crud-bodega")
+        
+        return render(request, "templateCrudBodega/registro-bodega.html", {
+            "data": bodega,
+            "errores": {}
+        })
 
+    # POST → Enviar datos actualizados a la API
     if request.method == "POST":
         data = {
             "NombreBodega": request.POST.get("NombreBodega"),
@@ -139,10 +145,17 @@ def actualizarBodega(request, IdBodega):
         if res.status_code in (200, 202):
             messages.success(request, "Bodega actualizada correctamente")
             return redirect("crud-bodega")
-        else:
-            messages.error(request, f"Error al actualizar la bodega: {res.text}")
 
-    return render(request, "templateCrudBodega/registro-bodega.html", {"bodega": bodega})
+        # Si hay errores de validación
+        try:
+            errores = res.json()
+        except:
+            errores = {"general": ["Error desconocido"]}
+
+        return render(request, "templateCrudBodega/registro-bodega.html", {
+            "data": data,
+            "errores": errores
+        })
 
 
 # ----------------------------------------------------------
