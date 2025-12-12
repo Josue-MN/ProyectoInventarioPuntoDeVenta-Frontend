@@ -1,105 +1,173 @@
 import requests
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from LoginApp.decorators import login_requerido, solo_admin
+from LoginApp.decorators import solo_admin
 
-API_URL = "http://127.0.0.1:8000/bodegas/"
+API_URL = "http://127.0.0.1:8000/cargos/"  # Cambia según tu API
+
 
 # ----------------------------------------------------------
 # FUNCIÓN PARA OBTENER HEADERS CON TOKEN
 # ----------------------------------------------------------
 def get_headers(request):
     token = request.session.get("token")
-
-    # Si no hay token, no pedirá nada a la API
     if not token:
         return {}
-
-    return {
-        "Authorization": f"Bearer {token}"
-    }
+    return {"Authorization": f"Bearer {token}"}
 
 
-
-# Vista para mostrar todos los cargos en una tabla/listado
+# ----------------------------------------------------------
+# LISTAR TODOS LOS CARGOS
+# ----------------------------------------------------------
 @solo_admin
 def cargosData(request):
-    cargos = Cargos.objects.all()  # Obtiene todos los registros del modelo Cargos
-    data = {'Cargos': cargos}  # Diccionario con los cargos para enviarlos a la plantilla
-    return render(request, 'templateCrudCargo/cargos-models.html', data)  # Renderiza la plantilla con los datos
+    try:
+        headers = get_headers(request)
+        response = requests.get(API_URL, headers=headers)
+
+        if response.status_code == 401:
+            messages.error(request, "No autorizado. Debes iniciar sesión nuevamente.")
+            return redirect("Login")
+
+        cargos = response.json()
+    except Exception as e:
+        print("ERROR LISTANDO CARGOS:", e)
+        cargos = []
+        messages.error(request, "No se pudo conectar con la API.")
+
+    return render(request, 'templateCrudCargo/cargos-models.html', {"Cargos": cargos})
 
 
-# Vista para registrar un nuevo cargo
+# ----------------------------------------------------------
+# REGISTRAR NUEVO CARGO
+# ----------------------------------------------------------
 @solo_admin
 def cargosRegistracionView(request):
-    form = forms.CargoRegistracionForm()  # Crea un formulario vacío
 
-    if request.method == 'POST':  # Si se envía el formulario
-        form = forms.CargoRegistracionForm(request.POST)  # Carga los datos enviados
-        if form.is_valid():  # Valida los datos del formulario
-            # Imprime en consola los datos ingresados (útil para depuración)
-            print("FORM VALIDO")
-            print("TIPO DE CARGO: ", form.cleaned_data['TipoDeCargo'])
-            print("ESTADO DEL CARGO: ", form.cleaned_data['EstadoDelCargo'])
-            print("DESCRIPCION DEL CARGO: ", form.cleaned_data['DescripcionDelCargo'])
-            print("SUELDO BASE: ", form.cleaned_data['SueldoBase'])
+    # GET → Mostrar formulario vacío
+    if request.method == "GET":
+        return render(request, 'templateCrudCargo/registro-cargo.html', {"data": {}, "errores": {}})
 
-            cargo_nuevo = form.save()  # Guarda el cargo en la base de datos
-            RegistrarAuditoriaCargo(request, cargo_nuevo, "REGISTRAR")
-            messages.success(request, "Cargo registrado correctamente")  # Mensaje de éxito
-            return redirect('admin-crud-cargo')  # Redirige al listado de cargos
-        else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")  # Mensaje de error
+    # POST → Enviar datos a la API
+    data = {
+        "TipoDeCargo": request.POST.get("TipoDeCargo"),
+        "EstadoDelCargo": request.POST.get("EstadoDelCargo"),
+        "DescripcionDelCargo": request.POST.get("DescripcionDelCargo"),
+        "SueldoBase": request.POST.get("SueldoBase"),
+    }
 
-    data = {'form': form}  # Diccionario con el formulario (vacío o con errores)
-    return render(request, 'templateCrudCargo/registro-cargo.html', data)  # Renderiza el formulario
+    headers = get_headers(request)
+    res = requests.post(API_URL, json=data, headers=headers)
+
+    if res.status_code == 201:
+        messages.success(request, "Cargo registrado correctamente")
+        return redirect("admin-crud-cargo")
+
+    # Manejo de errores
+    try:
+        errores = res.json()
+    except:
+        errores = {"general": ["Error desconocido"]}
+
+    return render(request, 'templateCrudCargo/registro-cargo.html', {"data": data, "errores": errores})
 
 
-# Vista para actualizar un cargo existente
+# ----------------------------------------------------------
+# ACTUALIZAR CARGO EXISTENTE
+# ----------------------------------------------------------
 @solo_admin
 def actualizarCargo(request, IdCargos):
-    cargo = Cargos.objects.get(IdCargos=IdCargos)  # Obtiene el cargo por su ID
-    form = forms.CargoRegistracionForm(instance=cargo)  # Crea un formulario con los datos existentes
+    headers = get_headers(request)
 
-    if request.method == 'POST':  # Si se envía el formulario con cambios
-        form = forms.CargoRegistracionForm(request.POST, instance=cargo)  # Carga los datos actualizados
-        if form.is_valid():  # Valida los datos
-            cargo_actualizado = form.save()  # Guarda los cambios
-            RegistrarAuditoriaCargo(request, cargo_actualizado, "ACTUALIZAR")
-            messages.success(request, "Cargo actualizado correctamente")  # Mensaje de éxito
-            return redirect('admin-crud-cargo')  # Redirige al listado
+    # GET → Obtener datos actuales
+    if request.method == "GET":
+        response = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
+        if response.status_code == 200:
+            cargo = response.json()
         else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")  # Mensaje de error
+            messages.error(request, "No se pudo obtener el cargo desde la API.")
+            return redirect("admin-crud-cargo")
 
-    data = {'form': form}  # Diccionario con el formulario
-    return render(request, 'templateCrudCargo/registro-cargo.html', data)  # Renderiza el formulario
+        return render(request, 'templateCrudCargo/registro-cargo.html', {"data": cargo, "errores": {}})
+
+    # POST → Enviar datos actualizados
+    data = {
+        "TipoDeCargo": request.POST.get("TipoDeCargo"),
+        "EstadoDelCargo": request.POST.get("EstadoDelCargo"),
+        "DescripcionDelCargo": request.POST.get("DescripcionDelCargo"),
+        "SueldoBase": request.POST.get("SueldoBase"),
+    }
+
+    res = requests.put(f"{API_URL}{IdCargos}/", json=data, headers=headers)
+
+    if res.status_code in (200, 202):
+        messages.success(request, "Cargo actualizado correctamente")
+        return redirect("admin-crud-cargo")
+
+    # Manejo de errores
+    try:
+        errores = res.json()
+    except:
+        errores = {"general": ["Error desconocido"]}
+
+    return render(request, 'templateCrudCargo/registro-cargo.html', {"data": data, "errores": errores})
 
 
-# Vista para mostrar confirmación antes de eliminar un cargo
-@solo_admin
-def confirmarEliminar(request, IdCargos):
-    cargo = Cargos.objects.get(IdCargos=IdCargos)  # Obtiene el cargo por su ID
-    data = {'cag' : cargo}  # Diccionario con el cargo
-    return render(request, 'templateCrudCargo/confirmar-eliminar.html', data)  # Renderiza plantilla de confirmación
-
-
-# Vista para eliminar un cargo
-@solo_admin
-def eliminarCargo(request, IdCargos):
-    cargo = Cargos.objects.get(IdCargos=IdCargos)  # Obtiene el cargo por su ID
-    if request.method == 'POST':  # Solo permite eliminar si se envía POST
-        RegistrarAuditoriaCargo(request, cargo, "ELIMINAR")
-        cargo.delete()  # Elimina el registro de la base de datos
-        messages.success(request, f"El cargo '{cargo.TipoDeCargo}' fue eliminado correctamente.")  # Mensaje de éxito
-        return redirect('admin-crud-cargo')  # Redirige al listado
-    else:
-        messages.error(request, "Método no permitido para eliminar usuarios.")  # Mensaje si no es POST
-        return redirect('admin-crud-cargo')  # Redirige al listado
-
-
-# Vista para mostrar los detalles de un cargo específico
+# ----------------------------------------------------------
+# DETALLE DE CARGO
+# ----------------------------------------------------------
 @solo_admin
 def detalleCargo(request, IdCargos):
-    cargo = Cargos.objects.get(IdCargos=IdCargos)  # Obtiene el cargo por su ID
-    data = {'cag' : cargo}  # Diccionario con el cargo
-    return render(request, 'templateCrudCargo/detalle-cargo.html', data)  # Renderiza plantilla de detalle
+    headers = get_headers(request)
+    try:
+        response = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
+        if response.status_code == 404:
+            messages.error(request, "El cargo no existe.")
+            return redirect("admin-crud-cargo")
+        cargo = response.json()
+    except Exception as e:
+        print("ERROR DETALLE CARGO:", e)
+        messages.error(request, "No se pudo obtener la información desde la API.")
+        return redirect("admin-crud-cargo")
+
+    return render(request, 'templateCrudCargo/detalle-cargo.html', {"cag": cargo})
+
+
+# ----------------------------------------------------------
+# CONFIRMAR ELIMINACIÓN
+# ----------------------------------------------------------
+@solo_admin
+def confirmarEliminar(request, IdCargos):
+    headers = get_headers(request)
+    response = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
+
+    if response.status_code == 200:
+        cargo = response.json()
+    else:
+        cargo = None
+
+    return render(request, 'templateCrudCargo/confirmar-eliminar.html', {"cag": cargo})
+
+
+# ----------------------------------------------------------
+# ELIMINAR CARGO
+# ----------------------------------------------------------
+@solo_admin
+def eliminarCargo(request, IdCargos):
+    if request.method != "POST":
+        messages.error(request, "Método no permitido para eliminar cargos.")
+        return redirect("admin-crud-cargo")
+
+    headers = get_headers(request)
+    res = requests.delete(f"{API_URL}{IdCargos}/", headers=headers)
+
+    if res.status_code in (200, 204):
+        messages.success(request, "Cargo eliminado correctamente")
+        try:
+            cargo = res.json()
+        except:
+            pass
+    else:
+        messages.error(request, f"No se pudo eliminar: {res.text}")
+
+    return redirect("admin-crud-cargo")

@@ -1,35 +1,43 @@
 {% extends 'base-crud.html' %}
-<!-- Extiende la plantilla base de CRUD, heredando estilos, scripts y estructura general -->
 
-{% block title %}Confirmar eliminacion de usuario{% endblock %}
-<!-- Define el título de la página que aparece en la pestaña del navegador -->
+{% block title %}Confirmar Eliminación de Cargo{% endblock %}
 
 {% block breadcrumb %}
-    <!-- Breadcrumb para mostrar la navegación jerárquica -->
     <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel de administración -->
-        <a href="{% url 'admin-crud-cargo' %}">Crud cargos > </a> <!-- Enlace al CRUD de cargos -->
-        <a>Confirmar Eliminacion</a> <!-- Página actual (no clickeable) -->
+        {% if request.session.Usuario_Username == "Admin" %}
+            <a href="{% url 'adminhome' %}">Panel Admin ></a>
+            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
+            <a>Confirmar Eliminación</a>
+        {% else %}
+            <a href="{% url 'adminhome' %}">Home ></a>
+            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
+            <a>Confirmar Eliminación</a>
+        {% endif %}
     </li>
 {% endblock %}
 
 {% block header_title %}
-    <!-- Título principal de la página -->
-    <h1 class="header-title">CONFIRMACION DE ELIMINACION</h1>
+    <h1 class="header-title">CONFIRMACIÓN DE ELIMINACIÓN</h1>
 {% endblock %}
 
 {% block content %}
-    <section>
-        <!-- Pregunta de confirmación al usuario sobre la eliminación -->
-        <h1>¿Seguro que deseas eliminar el cargo: {{ cag.TipoDeCargo}} ?</h1>
-        
-        <!-- Botón para volver al listado de cargos sin realizar cambios -->
-        <a href="{% url 'admin-crud-cargo' %}"><button class="button-header" type="button">VOLVER</button></a>
+<section>
+    <h1>¿Seguro que deseas eliminar el cargo: {{ cag.TipoDeCargo }}?</h1>
 
-        <!-- Formulario para confirmar la eliminación del cargo -->
+    {% if request.session.Usuario_Username == "Admin" %}
+        <a href="{% url 'admin-crud-cargo' %}">
+            <button class="button-header" type="button">Volver</button>
+        </a>
         <form method="POST" action="{% url 'admin-eliminar-cargo' cag.IdCargos %}">
-            {% csrf_token %} <!-- Token de seguridad obligatorio en Django -->
-            <button type="submit">ELIMINAR</button> <!-- Botón para enviar el formulario y eliminar -->
-        </form>
-    </section>
+    {% else %}
+        <a href="{% url 'admin-crud-cargo' %}">
+            <button class="button-header" type="button">Volver</button>
+        </a>
+        <form method="POST" action="{% url 'admin-eliminar-cargo' cag.IdCargos %}">
+    {% endif %}
+
+        {% csrf_token %}
+        <button type="submit">ELIMINAR</button>
+    </form>
+</section>
 {% endblock %}

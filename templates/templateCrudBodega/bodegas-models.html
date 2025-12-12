@@ -3,13 +3,16 @@
 {% block title %}Lista de Bodegas{% endblock %}
 
 {% block breadcrumb %}
+    <!-- Breadcrumbs: ruta de navegación dentro del panel de administración -->
     <li>
         {% if request.session.Usuario_Username == "Admin" %}
             <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a>Crud Bodegas > </a>
+            <a href="{% url 'admin-crud-categoria' %}">Crud Categoria > </a>
+            <a>Detalle categoria</a>
         {% else %}
             <a href="{% url 'home' %}">Home ></a>
-            <a>Crud Bodegas > </a>
+            <a href="{% url 'crud-categoria' %}">Crud Categoria > </a>
+            <a>Detalle categoria</a>
         {% endif %}
     </li>
 {% endblock %}
@@ -27,7 +30,7 @@
 {% block header_title %}
     <h1 class="header-title">LISTA DE BODEGAS</h1>
 
-    {% if request.session.Usuario_Username == "Admin" %}
+    {% if request.session.Usuario_Username == "admin" %}
         <a href="{% url 'adminhome' %}">
             <button class="button-header" type="button">Volver al Panel Admin</button>
         </a>

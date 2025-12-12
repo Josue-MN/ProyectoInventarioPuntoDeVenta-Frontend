@@ -1,61 +1,82 @@
 {% extends 'base-crud.html' %}
-<!-- Extiende la plantilla base de CRUD, heredando estilos, scripts y estructura general -->
 
 {% block title %}Lista de Cargos{% endblock %}
-<!-- Define el título de la página que aparece en la pestaña del navegador -->
 
 {% block breadcrumb %}
-    <!-- Breadcrumb para mostrar la navegación jerárquica -->
     <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel de administración -->
-        <a>Crud cargos > </a> <!-- Enlace al CRUD de cargos (no clickeable) -->
+        {% if request.session.Usuario_Username == "Admin" %}
+            <a href="{% url 'adminhome' %}">Panel Admin ></a>
+            <a>Crud Cargos ></a>
+        {% else %}
+            <a href="{% url 'home' %}">Home ></a>
+            <a>Crud Cargos ></a>
+        {% endif %}
     </li>
 {% endblock %}
 
+{% if messages %}
+<section class="messages">
+    {% for message in messages %}
+        <div class="message">
+            <h1>{{ message }}</h1>
+        </div>
+    {% endfor %}
+</section>
+{% endif %}
+
 {% block header_title %}
-    <!-- Título principal de la página -->
-    <h1 class="header-title">LISTA DE CARGOS</h1>
-    <!-- Botón para volver al home -->
-    <a href="{% url 'adminhome' %}"><button class="button-header" type="button">VOLVER</button></a>
-    <!-- Botón para registrar un nuevo cargo -->
-    <a href="{% url 'admin-registrar-cargo' %}"><button class="button-header" type="button">REGISTRAR CARGOS</button></a>
+    <h1 class="header-title">LISTA DE BODEGAS</h1>
+
+    {% if request.session.Usuario_Username == "Admin" %}
+        <a href="{% url 'adminhome' %}">
+            <button class="button-header" type="button">Volver al Panel Admin</button>
+        </a>
+        <a href="{% url 'admin-registrar-cargo' %}">
+            <button class="button-header" type="button">REGISTRAR</button>
+        </a>
+    {% else %}
+        <a href="{% url 'adminhome' %}">
+            <button class="button-header" type="button">Volver al Panel Admin</button>
+        </a>
+        <a href="{% url 'admin-registrar-cargo' %}">
+            <button class="button-header" type="button">REGISTRAR</button>
+        </a>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Verifica si existen cargos en la base de datos -->
     {% if Cargos %}
-    <table>
-        <thead>
-            <tr>
-                <th>ID CARGO</th>
-                <th>TIPO DE CARGO</th>
-                <th>ESTADO DEL CARGO</th>
-                <th>SUELDO BASE</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Recorre todos los cargos y los muestra en la tabla -->
-            {% for cag in Cargos %}
-            <tr>
-                <td>{{ cag.IdCargos}}</td>
-                <td>{{ cag.TipoDeCargo }}</td>
-                <td>{{ cag.EstadoDelCargo }}</td>
-                <td>{{ cag.SueldoBase }}</td>
-                <!-- Enlaces para ver detalle, actualizar o eliminar el cargo -->
-                <td>
-                    <a href="{% url 'admin-detalle-cargo' cag.IdCargos %}"><button>DETALLE</button></a>
-                    <a href="{% url 'admin-actualizar-cargo' cag.IdCargos %}">
-                        <button onclick="return confirm('¿Seguro que deseas actualizar este cargo?')">ACTUALIZAR</button>
-                    </a>
-                    <a href="{% url 'admin-confirmar-eliminar-cargo' cag.IdCargos %}"><button>ELIMINAR</button></a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID CARGO</th>
+                    <th>TIPO DE CARGO</th>
+                    <th>ESTADO DEL CARGO</th>
+                    <th>SUELDO BASE</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cag in Cargos %}
+                <tr>
+                    <td>{{ cag.IdCargos }}</td>
+                    <td>{{ cag.TipoDeCargo }}</td>
+                    <td>{{ cag.EstadoDelCargo }}</td>
+                    <td>{{ cag.SueldoBase }}</td>
+                    <td>
+                        <a href="{% url 'admin-detalle-cargo' cag.IdCargos %}"><button>DETALLE</button></a>
+                        <a href="{% url 'admin-actualizar-cargo' cag.IdCargos %}">
+                            <button>ACTUALIZAR</button>
+                        </a>
+                        <a href="{% url 'admin-confirmar-eliminar-cargo' cag.IdCargos %}">
+                            <button>ELIMINAR</button>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-        <!-- Mensaje cuando no hay cargos registrados -->
         <div class="no-registros">
             <h1>NO HAY CARGOS REGISTRADOS</h1>
         </div>

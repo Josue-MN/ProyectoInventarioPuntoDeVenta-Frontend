@@ -1,33 +1,129 @@
 {% extends 'base-form.html' %}
 <!-- Extiende la plantilla base de formularios, heredando estilos, scripts y estructura general -->
 
-<!-- Título de la página que aparece en la pestaña del navegador -->
-{% block title %}Registro de cargos{% endblock %}
+{% block title %}Registro de Cargos{% endblock %}
 
 {% block breadcrumb %}
-    <!-- Breadcrumb para mostrar la navegación jerárquica -->
     <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel de administración -->
-        <a href="{% url 'admin-crud-cargo' %}">Crud cargos > </a> <!-- Enlace al CRUD de cargos -->
-        <a>Formulario cargos</a> <!-- Página actual (no clickeable) -->
+        {% if request.session.Usuario_Username == "Admin" %}
+            <a href="{% url 'adminhome' %}">Panel Admin ></a>
+            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
+            <a>Formulario Cargos</a>
+        {% else %}
+            <a href="{% url 'adminhome' %}">Home ></a>
+            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
+            <a>Formulario Cargos</a>
+        {% endif %}
     </li>
 {% endblock %}
 
+{% block extra_messages %}
+    {% if errores %}
+        <section class="messages">
+            <div class="message">
+                <h1>Corrige los errores en el formulario antes de continuar</h1>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+
 {% block header_title %}
-    <!-- Título principal de la página y botón de navegación -->
     <h1 class="header-title">REGISTRO DE CARGOS</h1>
-    <a href="{% url 'admin-crud-cargo' %}">
-        <button class="button-header" type="button">VOLVER</button>
-    </a>   
+    {% if request.session.Usuario_Username == "Admin" %}
+        <a href="{% url 'admin-crud-cargo' %}">
+            <button class="button-header" type="button">VOLVER</button>
+        </a>
+    {% else %}
+        <a href="{% url 'admin-crud-cargo' %}">
+            <button class="button-header" type="button">VOLVER</button>
+        </a>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Formulario para crear o actualizar cargos -->
-    <form method="POST" novalidate>
-        {% csrf_token %} <!-- Token de seguridad obligatorio en Django -->
-        {{ form.as_div }} <!-- Renderiza automáticamente todos los campos del formulario como bloques div -->
-        <input class="form-enviar" type="submit" value="ENVIAR" 
-               onclick="return confirm('¿Seguro que deseas enviar estos datos?')"/>
-        <!-- Botón para enviar el formulario con confirmación -->
-    </form>
+<form method="POST" novalidate>
+    {% csrf_token %}
+
+    <!-- ================================ -->
+    <!-- TIPO DE CARGO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="TipoDeCargo">Tipo de Cargo:</label>
+        <div class="form-help">Seleccione el tipo del cargo</div>
+
+        {% if errores.TipoDeCargo %}
+            <div class="field-error">• {{ errores.TipoDeCargo.0 }}</div>
+        {% endif %}
+
+        <select name="TipoDeCargo" id="TipoDeCargo" class="input-text">
+            <option value="Seleccione…">Seleccione…</option>
+            <option value="Administrador" {% if data.TipoDeCargo == "Administrador" %}selected{% endif %}>Administrador</option>
+            <option value="Etiquetador" {% if data.TipoDeCargo == "Etiquetador" %}selected{% endif %}>Etiquetador</option>
+            <option value="Bodeguero" {% if data.TipoDeCargo == "Bodeguero" %}selected{% endif %}>Bodeguero</option>
+            <option value="Ayudante" {% if data.TipoDeCargo == "Ayudante" %}selected{% endif %}>Ayudante</option>
+            <option value="Despachador" {% if data.TipoDeCargo == "Despachador" %}selected{% endif %}>Despachador</option>
+        </select>
+    </div>
+
+    <!-- ================================ -->
+    <!-- ESTADO DEL CARGO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="EstadoDelCargo">Estado del Cargo:</label>
+        <div class="form-help">Seleccione el estado del cargo (Activo/Inactivo)</div>
+
+        {% if errores.EstadoDelCargo %}
+            <div class="field-error">• {{ errores.EstadoDelCargo.0 }}</div>
+        {% endif %}
+
+        <select name="EstadoDelCargo" id="EstadoDelCargo" class="input-text">
+            <option value="Seleccione…">Seleccione…</option>
+            <option value="Activo" {% if data.EstadoDelCargo == "Activo" %}selected{% endif %}>Activo</option>
+            <option value="Inactivo" {% if data.EstadoDelCargo == "Inactivo" %}selected{% endif %}>Inactivo</option>
+        </select>
+    </div>
+
+    <!-- ================================ -->
+    <!-- DESCRIPCIÓN DEL CARGO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="DescripcionDelCargo">Descripción del Cargo:</label>
+        <div class="form-help">Ingrese una descripción breve del cargo</div>
+
+        {% if errores.DescripcionDelCargo %}
+            <div class="field-error">• {{ errores.DescripcionDelCargo.0 }}</div>
+        {% endif %}
+
+        <textarea 
+            name="DescripcionDelCargo"
+            id="DescripcionDelCargo"
+            placeholder="Ej: Encargado de ventas y atención al cliente"
+            class="input-text"
+        >{{ data.DescripcionDelCargo|default:'' }}</textarea>
+    </div>
+
+    <!-- ================================ -->
+    <!-- SUELDO BASE -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="SueldoBase">Sueldo Base:</label>
+        <div class="form-help">Ingrese el sueldo base del cargo</div>
+
+        {% if errores.SueldoBase %}
+            <div class="field-error">• {{ errores.SueldoBase.0 }}</div>
+        {% endif %}
+
+        <input 
+            type="number"
+            name="SueldoBase"
+            id="SueldoBase"
+            placeholder="Ej: 500000"
+            class="input-text"
+            value="{{ data.SueldoBase|default:'' }}"
+        >
+    </div>
+
+    <input class="form-enviar" type="submit" value="ENVIAR"
+           onclick="return confirm('¿Seguro que deseas enviar estos datos?')"/>
+</form>
 {% endblock %}

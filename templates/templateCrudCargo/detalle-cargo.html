@@ -1,51 +1,65 @@
 {% extends 'base-crud.html' %}
-<!-- Extiende la plantilla base de CRUD, heredando estilos, scripts y estructura general -->
 
 {% block title %}Detalle de Cargos{% endblock %}
-<!-- Define el título de la página que aparece en la pestaña del navegador -->
 
 {% block breadcrumb %}
-    <!-- Breadcrumb para mostrar la navegación jerárquica -->
     <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel de administración -->
-        <a href="{% url 'admin-crud-cargo' %}">Crud cargos > </a> <!-- Enlace al CRUD de cargos -->
-        <a>Detalle cargo</a> <!-- Página actual (no clickeable) -->
+        {% if request.session.Usuario_Username == "Admin" %}
+            <a href="{% url 'adminhome' %}">Panel Admin ></a>
+            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
+            <a>Detalle cargo</a>
+        {% else %}
+            <a href="{% url 'adminhome' %}">Home ></a>
+            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
+            <a>Detalle cargo</a>
+        {% endif %}
     </li>
 {% endblock %}
 
 {% block header_title %}
-    <!-- Título principal de la página y botón de navegación -->
-    <h1 class="header-title">Detalle DE CARGOS</h1>
-    <a href="{% url 'admin-crud-cargo' %}"><button class="button-header" type="button">VOLVER</button></a>
+    <h1 class="header-title">DETALLE DE CARGO</h1>
+    {% if request.session.Usuario_Username == "Admin" %}
+        <a href="{% url 'admin-crud-cargo' %}"><button class="button-header" type="button">VOLVER</button></a>
+    {% else %}
+        <a href="{% url 'admin-crud-cargo' %}"><button class="button-header" type="button">VOLVER</button></a>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Tabla que muestra los detalles de un cargo específico -->
     <table>
         <thead>
             <tr>
                 <th>ID CARGO</th>
                 <th>TIPO DE CARGO</th>
                 <th>ESTADO DEL CARGO</th>
-                <th>DESCRIPCION DEL CARGO</th>
+                <th>DESCRIPCIÓN DEL CARGO</th>
                 <th>SUELDO BASE</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <!-- Datos del cargo específico -->
-                <td>{{ cag.IdCargos}}</td>
+                <td>{{ cag.IdCargos }}</td>
                 <td>{{ cag.TipoDeCargo }}</td>
                 <td>{{ cag.EstadoDelCargo }}</td>
                 <td>{{ cag.DescripcionDelCargo }}</td>
                 <td>{{ cag.SueldoBase }}</td>
                 <td>
-                    <!-- Botones para actualizar o eliminar el cargo -->
-                    <a href="{% url 'admin-actualizar-cargo' cag.IdCargos %}">
-                        <button onclick="return confirm('¿Seguro que deseas actualizar este cargo?')">ACTUALIZAR</button>
-                    </a>
-                    <a href="{% url 'admin-confirmar-eliminar-cargo' cag.IdCargos %}"><button>ELIMINAR</button></a>
+                    {% if request.session.Usuario_Username == "Admin" %}
+                        <a href="{% url 'admin-actualizar-cargo' cag.IdCargos %}">
+                            <button onclick="return confirm('¿Seguro que deseas actualizar este cargo?')">ACTUALIZAR</button>
+                        </a>
+                        <a href="{% url 'admin-confirmar-eliminar-cargo' cag.IdCargos %}">
+                            <button>ELIMINAR</button>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'admin-actualizar-cargo' cag.IdCargos %}">
+                            <button onclick="return confirm('¿Seguro que deseas actualizar este cargo?')">ACTUALIZAR</button>
+                        </a>
+                        <a href="{% url 'admin-confirmar-eliminar-cargo' cag.IdCargos %}">
+                            <button>ELIMINAR</button>
+                        </a>
+                    {% endif %}
                 </td>
             </tr>
         </tbody>

@@ -1,52 +1,64 @@
+# decorators.py
 from django.shortcuts import redirect
 from django.views.decorators.cache import cache_control
+from django.contrib import messages
 
-# Este decorador evita que un usuario NO autenticado acceda a una vista.
-# Verifica si existe la variable de sesión "Usuario_Username".
-# Si no existe, redirige al Login.
-# También incluye configuración de caché para evitar volver atrás después de cerrar sesión.
-# ---------------------------------------------------------
-
+# ----------------------------------------------------------
+# LOGIN REQUERIDO
+# ----------------------------------------------------------
 def login_requerido(funcion_envuelta):
-
-    # Control de cache: impide que el navegador guarde páginas protegidas,
-    # evitando que el usuario navegue "hacia atrás" tras hacer logout.
+    """
+    Evita que un usuario no autenticado acceda a la vista.
+    Solo verifica que exista 'Usuario_Username' y 'token' en la sesión.
+    """
     @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-
     def funcion_reemplazada(request, *args, **kwargs):
-        # Debug para ver qué usuario está en la sesión (útil en desarrollo)
-        print("DEBUG -> Usuario_Username:", request.session.get("Usuario_Username"))
+        usuario = request.session.get("Usuario_Username")
+        token = request.session.get("token")
 
-        # Verificación de sesión:
-        # Si no existe el usuario en sesión, se redirige al login
-        if not request.session.get("Usuario_Username"):
+        # Si no hay usuario o token, redirige al login
+        if not usuario or not token:
+            try:
+                messages.error(request, "Debes iniciar sesión.")
+            except:
+                pass  # Evita que falle si MessageMiddleware no está activo
             return redirect('Login')
 
-        # Si existe la sesión, se ejecuta la vista original
+        # Si hay sesión válida, ejecuta la vista original
         return funcion_envuelta(request, *args, **kwargs)
 
     return funcion_reemplazada
 
-# Permite acceso SOLO si el usuario logeado es "Admin".
-# Caso contrario, redirige al home.
-# Protege vistas administrativas sin necesidad de usar permisos de Django.
-# ---------------------------------------------------------
 
+# ----------------------------------------------------------
+# SOLO ADMIN
+# ----------------------------------------------------------
 def solo_admin(funcion_envuelta):
-
-    # Evita que el navegador acceda a páginas cacheadas
+    """
+    Permite acceso solo si el usuario logeado es 'Admin'.
+    """
     @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-
     def funcion_reemplazada(request, *args, **kwargs):
-        # Obtiene el usuario almacenado en la sesión
-        UsuarioLogeado = request.session.get("Usuario_Username")
+        usuario = request.session.get("Usuario_Username")
+        token = request.session.get("token")
 
-        # Revisa si el usuario NO es admin
-        if UsuarioLogeado != "Admin":
-            # Si no es admin, se redirige al home para evitar acceso
+        # Verifica que exista sesión
+        if not usuario or not token:
+            try:
+                messages.error(request, "Debes iniciar sesión.")
+            except:
+                pass
+            return redirect('Login')
+
+        # Solo Admin
+        if usuario.lower() != "admin":
+            try:
+                messages.error(request, "No tienes permisos para acceder a esta sección.")
+            except:
+                pass
             return redirect('home')
 
-        # Si es admin, se ejecuta la vista
+        # Si es Admin, ejecuta la vista
         return funcion_envuelta(request, *args, **kwargs)
 
     return funcion_reemplazada
