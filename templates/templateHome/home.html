@@ -16,14 +16,8 @@
 
         <img src="{% static 'images/usuario.png' %}" class="crud-user-logo">
         
-        {% if Usuario %}
-            {% for usu in Usuario %}
-                <h1>USERNAME:</h1>
-                <h1>{{ usu.Username }}</h1>
-                <h1>CORREO ELECTRONICO:</h1>
-                <h1>{{ usu.CorreoElectronico }}</h1>
-            {% endfor %}
-        {% endif %}
+        <h1>USERNAME:</h1>
+        <h1>{{ Usuario|default:"Desconocido" }}</h1>
 
 
         <a href={% url 'Logout' %} class="crud-card cerrar-sesion">

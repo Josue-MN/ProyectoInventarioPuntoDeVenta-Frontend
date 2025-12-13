@@ -1,111 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 {% load static %}
-<!-- Carga la etiqueta 'static' para poder usar archivos estáticos (CSS, imágenes, JS) -->
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOME ADMIN</title>
 
-    <!-- Vincula el archivo CSS del panel admin -->
     <link rel="stylesheet" href="{% static 'css/admin-home-style.css' %}">
 </head>
 
 <body class="inicio-div-style">
-<!-- Clase general para el estilo del fondo/página -->
 
 <main class="parent">
-<!-- Contenedor principal de toda la vista -->
 
-    <!-- ------------------------------------------------------------ -->
-    <!-- DIV 1: PANEL LATERAL IZQUIERDO (INFORMACIÓN DEL USUARIO)     -->
-    <!-- ------------------------------------------------------------ -->
+    <!-- ============================================================ -->
+    <!-- PANEL LATERAL: USUARIO LOGUEADO                               -->
+    <!-- ============================================================ -->
     <div class="div1">
 
-        <!-- Ícono de usuario -->
         <img src="{% static 'images/usuario.png' %}" class="crud-user-logo">
-        
-        <!-- Muestra los datos del usuario logueado -->
-        {% if Usuario %}
-            {% for usu in Usuario %}
-                <h1>USERNAME:</h1>
-                <h1>{{ usu.Username }}</h1>
 
-                <h1>CORREO ELECTRONICO:</h1>
-                <h1>{{ usu.CorreoElectronico }}</h1>
-            {% endfor %}
-        {% endif %}
+        <h1>USERNAME:</h1>
+        <h1>{{ Usuario|default:"Desconocido" }}</h1>
 
-        <!-- Botón para cerrar sesión -->
-        <a href={% url 'Logout' %} class="crud-card cerrar-sesion">
+        <a href="{% url 'Logout' %}" class="crud-card cerrar-sesion">
             <img src="{% static 'images/cerrar-sesion.png' %}" class="crud-icon">
             <span>CERRAR SESIÓN</span>
         </a>
     </div>
 
-    <!-- ------------------------------------------------------------ -->
-    <!-- DIV 2: TÍTULO PRINCIPAL DEL PANEL ADMIN                      -->
-    <!-- ------------------------------------------------------------ -->
+    <!-- ============================================================ -->
+    <!-- TÍTULO PRINCIPAL                                             -->
+    <!-- ============================================================ -->
     <div class="div2">
         <h1 class="titulo-panel">PANEL DE ADMINISTRADOR</h1>
     </div>
 
-    <!-- ------------------------------------------------------------ -->
-    <!-- DIV 4: ACCESO A LA VISTA DE AUDITORÍA                        -->
-    <!-- ------------------------------------------------------------ -->
+    <!-- ============================================================ -->
+    <!-- ACCESO AUDITORÍAS                                            -->
+    <!-- ============================================================ -->
     <div class="div4">
-        <h2>Vista de Auditoria</h2>
+        <h2>Vista de Auditoría</h2>
 
-        <!-- Tarjeta para acceder al listado de auditorías -->
         <a href="{% url 'auditorias' %}" class="crud-card">
             <img src="{% static 'images/buscar.png' %}" class="crud-icon">
-            <span>AUDITORIAS</span>
+            <span>AUDITORÍAS</span>
         </a>
     </div>
 
-    <!-- ------------------------------------------------------------ -->
-    <!-- DIV 3: SECCIÓN PRINCIPAL CON TODAS LAS OPCIONES CRUD         -->
-    <!-- ------------------------------------------------------------ -->
+    <!-- ============================================================ -->
+    <!-- MENÚ CRUD                                                    -->
+    <!-- ============================================================ -->
     <div class="div3">
 
         <h2 class="titulo-cruds">Gestión del Sistema</h2>
 
-        <!-- GRID con las tarjetas del menú -->
         <nav class="crud-grid">
 
-            <!-- CRUD EMPLEADOS -->
             <a href="{% url 'admin-crud-empleado' %}" class="crud-card">
                 <img src="{% static 'images/business-people.png' %}" class="crud-icon">
                 <span>CRUD EMPLEADOS</span>
             </a>
 
-            <!-- CRUD USUARIOS -->
             <a href="{% url 'admin-crud-usuario' %}" class="crud-card">
                 <img src="{% static 'images/user-interface.png' %}" class="crud-icon">
                 <span>CRUD USUARIOS</span>
             </a>
 
-            <!-- CRUD PRODUCTOS -->
             <a href="{% url 'admin-crud-producto' %}" class="crud-card">
                 <img src="{% static 'images/caja-de-entrega.png' %}" class="crud-icon">
                 <span>CRUD PRODUCTOS</span>
             </a>
 
-            <!-- CRUD CATEGORÍAS -->
             <a href="{% url 'admin-crud-categoria' %}" class="crud-card">
                 <img src="{% static 'images/categorizacion.png' %}" class="crud-icon">
                 <span>CRUD CATEGORÍAS</span>
             </a>
 
-            <!-- CRUD BODEGAS -->
             <a href="{% url 'admin-crud-bodega' %}" class="crud-card">
                 <img src="{% static 'images/bodega.png' %}" class="crud-icon">
                 <span>CRUD BODEGAS</span>
             </a>
 
-            <!-- CRUD CARGOS -->
             <a href="{% url 'admin-crud-cargo' %}" class="crud-card">
                 <img src="{% static 'images/cargos.png' %}" class="crud-icon">
                 <span>CRUD CARGOS</span>

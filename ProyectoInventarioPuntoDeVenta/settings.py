@@ -85,20 +85,6 @@ WSGI_APPLICATION = 'ProyectoInventarioPuntoDeVenta.wsgi.application'
 
 #poner en cmd en la carpeta del proyecto: pip install PyMySQL
 
-import pymysql
-pymysql.install_as_MySQLdb()
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'punto-de-venta-db',
-        'USER': 'root',
-        'PASSWORD': 'root'
-    }
-}
-
-#utilizar cmd: python manage.py makemigrations
-#despues: python manage.py migrate
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

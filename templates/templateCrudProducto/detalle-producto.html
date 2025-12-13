@@ -4,97 +4,91 @@
 {% block title %}Detalle de Producto{% endblock %}
 <!-- Define el título de la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Bloque de navegación (breadcrumbs) que indica la ruta dentro del sistema -->
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a href="{% url 'admin-crud-producto' %}">Crud Productos > </a>
-            <a>Detalle producto</a>
-        {% else %}
-            <a href="{% url 'home' %}">Home ></a>
-            <a href="{% url 'crud-producto' %}">Crud Productos > </a>
-            <a>Detalle producto</a>
-        {% endif %}
-    </li>
-{% endblock %}
+
 
 {% block header_title %}
-    <!-- Título principal de la página -->
-    <h1 class="header-title">DETALLES PRODUCTO</h1>
-    <!-- Botón para volver al listado de productos, usa función JS -->
-    {% if request.session.Usuario_Username == "Admin" %}
-        <a href="{% url 'admin-crud-producto' %}">
-            <button class="button-header" type="button">Volver al Panel Admin</button>
-        </a>
-    {% else %}
-        <a href="{% url 'crud-producto' %}">
-            <button class="button-header" type="button">Volver al Inicio</button>
-        </a>
-    {% endif %}
+<h1 class="header-title">DETALLES DEL PRODUCTO</h1>
+{% if request.session.Usuario_Username == "admin" %}
+    <a href="{% url 'admin-crud-producto' %}">
+        <button class="button-header" type="button">Volver al Panel Admin</button>
+    </a>
+{% else %}
+    <a href="{% url 'crud-producto' %}">
+        <button class="button-header" type="button">Volver al Inicio</button>
+    </a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Tabla que muestra los detalles del producto -->
-    <table>
-        <thead>
-            <tr>
-                <th>ID PRODUCTO</th>
-                <th>Código de barras</th>
-                <th>Valor</th>
-                <th>Stock</th>
-                <th>Nombre del producto</th>
-                <th>Fecha de registro</th>
-                <th>Marca</th>
-                <th>Fecha de vencimiento</th>
-                <th>Categoria del Producto</th>
-                <th>Bodega asociada</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <!-- Mostramos los valores del producto usando variables de Django -->
-                <td scope="row">{{ pro.IdProducto }}</td>
-                <td>{{ pro.CodigoDeBarras }}</td>
-                <td>{{ pro.ValorProducto }}</td>
-                <td>{{ pro.StockProducto }}</td>
-                <td>{{ pro.NombreProducto }}</td>
-                <td>{{ pro.FechaDeRegistroProducto }}</td>
-                <td>{{ pro.MarcaProducto }}</td>
-                <td>{{ pro.FechaDeVencimiento }}</td>
-                
-                {% if pro.CategoriaProducto %}
-                    <td>{{ pro.CategoriaProducto }}</td>
-                {% else %}
-                    <td>NO ASOCIADO</td>
-                {% endif %}    
-                
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Código de barras</th>
+            <th>Valor</th>
+            <th>Stock</th>
+            <th>Nombre</th>
+            <th>Fecha de registro</th>
+            <th>Marca</th>
+            <th>Fecha de vencimiento</th>
+            <th>Categoría</th>
+            <th>Bodega asociada</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ pro.IdProducto }}</td>
+            <td>{{ pro.CodigoDeBarras }}</td>
+            <td>{{ pro.ValorProducto }}</td>
+            <td>{{ pro.StockProducto }}</td>
+            <td>{{ pro.NombreProducto }}</td>
+            <td>{{ pro.FechaDeRegistroProducto }}</td>
+            <td>{{ pro.MarcaProducto }}</td>
+            <td>{{ pro.FechaDeVencimiento }}</td>
+            
+            <td>
+               {% if pro.CategoriaProducto %}
+                   {% for cat in Categorias %}
+                       {% if cat.IdCategoriaProducto == pro.CategoriaProducto %}
+                            {{ cat.NombreCategoria }}
+                      {% endif %}
+                   {% endfor %}
+               {% else %}
+                   NO ASOCIADO
+               {% endif %}
+            </td>
+
+            <td>
                 {% if pro.Bodegas %}
-                    <td>{{ pro.Bodegas }}</td>
+                    {% for bod in Bodegas %}
+                        {% if bod.IdBodega == pro.Bodegas %}
+                            {{ bod.NombreBodega }}
+                        {% endif %}
+                    {% endfor %}
                 {% else %}
-                    <td>NO ASOCIADO</td>
-                {% endif %} 
-                <!-- Botones para actualizar o eliminar producto -->
-                <td>
-                    <!-- Actualización: confirma con un popup y redirige usando JS -->
-                    {% if request.session.Usuario_Username == "Admin" %}
-                        <a href="{% url 'admin-actualizar-producto' pro.IdProducto %}" >
-                            <button class="button-header" type="button">ACTUALIZAR</button>
-                        </a>
-                        <a href="{% url 'admin-confirmar-eliminar-producto' pro.IdProducto %}" >
-                            <button class="button-header" type="button">ELIMINAR</button>
-                        </a>
-                    {% else %}
-                        <a href="{% url 'actualizar-producto' pro.IdProducto %}" >
-                            <button class="button-header" type="button">ACTUALIZAR</button>
-                        </a>
-                        <a href="{% url 'confirmar-eliminar-producto' pro.IdProducto %}" >
-                            <button class="button-header" type="button">ELIMINAR</button>
-                        </a>
-                    {% endif %}
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                    NO ASOCIADO
+                {% endif %}
+            </td>
+            
+            <td>
+                {% if request.session.Usuario_Username == "admin" %}
+                    <a href="{% url 'admin-actualizar-producto' pro.IdProducto %}">
+                        <button class="button-header" type="button">ACTUALIZAR</button>
+                    </a>
+                    <a href="{% url 'admin-confirmar-eliminar-producto' pro.IdProducto %}">
+                        <button class="button-header" type="button">ELIMINAR</button>
+                    </a>
+                {% else %}
+                    <a href="{% url 'actualizar-producto' pro.IdProducto %}">
+                        <button class="button-header" type="button">ACTUALIZAR</button>
+                    </a>
+                    <a href="{% url 'confirmar-eliminar-producto' pro.IdProducto %}">
+                        <button class="button-header" type="button">ELIMINAR</button>
+                    </a>
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
 {% endblock %}

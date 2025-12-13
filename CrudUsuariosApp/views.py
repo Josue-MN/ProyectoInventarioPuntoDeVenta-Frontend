@@ -1,142 +1,284 @@
+import requests
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from AuditoriaApp.views import RegistrarAuditoriaUsuario
 from LoginApp.decorators import solo_admin
 
-#Models
+# ----------------------------
+# API URLs
+# ----------------------------
+API_URL_USUARIOS = "http://127.0.0.1:8000/usuarios/"
+API_URL_EMPLEADOS = "http://127.0.0.1:8000/empleados/"
+API_URL_CARGOS = "http://127.0.0.1:8000/cargos/"
+API_URL_AUTHUSER = "http://127.0.0.1:8000/authuser/"
+
+# ----------------------------
+# Función auxiliar headers
+# ----------------------------
+def get_headers(request):
+    token = request.session.get("token")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+# ----------------------------
+# LISTAR USUARIOS
+# ----------------------------
 @solo_admin
 def usuariosData(request):
-    """
-    Vista que muestra el listado completo de usuarios del sistema.
-    El decorador @solo_admin asegura que solo administradores puedan acceder.
-    """
-    usuarios = Usuarios.objects.all()  # Obtiene todos los usuarios registrados
-    data = {'Usuarios' : usuarios}     # Datos enviados al template
-    return render(request, 'templateCrudUsuario/usuarios-models.html', data)
+    try:
+        res = requests.get(API_URL_USUARIOS, headers=get_headers(request))
+        usuarios = res.json() if res.status_code == 200 else []
+    except:
+        usuarios = []
+        messages.error(request, "No se pudo conectar con la API.")
+    return render(request, 'templateCrudUsuario/usuarios-models.html', {"Usuarios": usuarios})
 
-
-#Form
+# ----------------------------
+# REGISTRAR USUARIO
+# ----------------------------
 @solo_admin
 def usuariosRegistrationView(request):
-    """
-    Vista encargada del registro de un nuevo usuario.
-    Muestra el formulario de creación y procesa la información enviada.
-    """
-    form = forms.UsuarioRegistrationForm()  # Formulario vacío para renderizar
-    actualizar = False                       # Indica que NO es actualización, sino registro
-
-    # Si el método es POST, significa que el formulario fue enviado
-    if request.method == 'POST':
-        form = forms.UsuarioRegistrationForm(request.POST)
+    try:
+        Empleados = requests.get(API_URL_EMPLEADOS, headers=get_headers(request)).json()
+        Cargos = requests.get(API_URL_CARGOS, headers=get_headers(request)).json()
+        SuperUsuarios = requests.get(API_URL_AUTHUSER, headers=get_headers(request)).json()
         
-        # Validación del formulario
-        if form.is_valid():
-            # Debug (opcional) para ver los datos procesados
-            print("FORM ES VALIDO")
-            print("USERNAME: ", form.cleaned_data['Username'])
-            print("PASSWORD: ", form.cleaned_data['Password'])
-            print("CONFIRMAR PASSWORD: ", form.cleaned_data['ConfirmarPassword'])
-            print("CORREO ELECTRONICO: ", form.cleaned_data['CorreoElectronico'])
-            print("EMPLEADO SELECCIONADO", form.cleaned_data['Empleado'])
-            print("CARGO SELECCIONADO", form.cleaned_data['Cargo'])
-            
-            # Guarda el usuario en la BD
-            usuario_registrado = form.save()
+        print("=== DEBUG EMPLEADOS ===")
+        print(Empleados[0] if Empleados else "vacío")
+        print("\n=== DEBUG CARGOS ===")
+        print(Cargos[0] if Cargos else "vacío")
+    except Exception as e:
+        print(f"Error: {e}")
+        Empleados, Cargos, SuperUsuarios = [], [], []
+        messages.error(request, "No se pudieron cargar empleados, cargos o usuarios.")
 
-            # Registra la auditoría correspondiente
-            RegistrarAuditoriaUsuario(request, usuario_registrado, "REGISTRAR")
+    data, errores = {}, {}
 
-            # Mensaje de éxito para el usuario
-            messages.success(request, "Usuario registrado correctamente")
+    if request.method == "POST":
+        data = {
+            "Username": request.POST.get("Username", "").strip(),
+            "Password": request.POST.get("Password", "").strip(),
+            "ConfirmarPassword": request.POST.get("ConfirmarPassword", "").strip(),
+            "CorreoElectronico": request.POST.get("CorreoElectronico", "").strip(),
+        }
 
-            # Redirección al listado de usuarios
-            return redirect('admin-crud-usuario')
+        try:
+            data["Empleado"] = int(request.POST.get("Empleado"))
+        except (ValueError, TypeError):
+            data["Empleado"] = None
 
-        else:
-            # Si hay errores en el formulario
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-        
-    # Renderiza la vista enviando el formulario
-    data = {
-        'form': form,
-        'actualizar': actualizar
-    }
-    return render(request, 'templateCrudUsuario/registro-usuario.html', data)
+        try:
+            data["Cargo"] = int(request.POST.get("Cargo"))
+        except (ValueError, TypeError):
+            data["Cargo"] = None
 
+        try:
+            data["SuperUserAsociado"] = int(request.POST.get("SuperUserAsociado")) if request.POST.get("SuperUserAsociado") else None
+        except (ValueError, TypeError):
+            data["SuperUserAsociado"] = None
 
-#Actualizar
+        for campo in ["Username", "Password", "ConfirmarPassword", "CorreoElectronico", "Empleado", "Cargo"]:
+            if not data.get(campo):
+                errores[campo] = [f"El campo {campo} es obligatorio"]
+
+        if data.get("Password") != data.get("ConfirmarPassword"):
+            errores["ConfirmarPassword"] = ["Las contraseñas no coinciden"]
+
+        if not errores:
+            try:
+                payload = {
+                    "Username": data["Username"],
+                    "Password": data["Password"],
+                    "CorreoElectronico": data["CorreoElectronico"],
+                    "Empleado": data["Empleado"],
+                    "Cargo": data["Cargo"],
+                    "UserAuth": data["SuperUserAsociado"],
+                }
+                print("=== PAYLOAD ENVIADO ===")
+                print(payload)
+                res = requests.post(API_URL_USUARIOS, json=payload, headers=get_headers(request))
+                print(f"=== STATUS CODE: {res.status_code} ===")
+                print(f"=== RESPONSE: {res.text} ===")
+                if res.status_code == 201:
+                    messages.success(request, "Usuario registrado correctamente")
+                    return redirect('admin-crud-usuario')
+                errores.update(res.json())
+            except Exception as e:
+                print(f"=== EXCEPTION: {e} ===")
+                errores["general"] = ["Error al conectar con la API"]
+
+    return render(request, 'templateCrudUsuario/registro-usuario.html',
+                  {"data": data, "errores": errores, "Empleados": Empleados, "Cargos": Cargos, "SuperUsuarios": SuperUsuarios})
+
+# ----------------------------
+# ACTUALIZAR USUARIO
+# ----------------------------
 @solo_admin
 def actualizarUsuario(request, IdUsuarios):
-    """
-    Vista para actualizar un usuario existente.
-    Carga el formulario con los datos actuales del usuario.
-    """
-    usuario = Usuarios.objects.get(IdUsuarios=IdUsuarios)  # Obtiene el usuario por ID
-    form = forms.UsuarioUpdateForm(instance=usuario)        # Formulario cargado con sus datos
-    actualizar = True                                       # Indica que esta acción es de actualización
+    errores = {}
+    data = {}
 
-    if request.method == 'POST':
-        form = forms.UsuarioUpdateForm(request.POST, instance=usuario)
-        
-        if form.is_valid():
-            usuario_actualizado = form.save()  # Guarda los cambios
-            RegistrarAuditoriaUsuario(request, usuario_actualizado, "ACTUALIZAR")
-            messages.success(request, "Usuario actualizado correctamente")
-            return redirect('admin-crud-usuario')
-        else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-            
-    data = {
-        'form': form,
-        'actualizar': actualizar,
-        'UsuarioActual': usuario
+    # ----------------------------
+    # CARGAR DATOS (GET)
+    # ----------------------------
+    if request.method == "GET":
+        try:
+            res = requests.get(
+                f"{API_URL_USUARIOS}{IdUsuarios}/",
+                headers=get_headers(request)
+            )
+
+            if res.status_code != 200:
+                messages.error(request, "No se pudo cargar el usuario.")
+                return redirect("admin-crud-usuario")
+
+            usuario = res.json()
+
+            data = {
+                "Username": usuario.get("Username"),
+                "CorreoElectronico": usuario.get("CorreoElectronico"),
+            }
+
+        except Exception as e:
+            print(e)
+            messages.error(request, "Error al conectar con la API.")
+            return redirect("admin-crud-usuario")
+
+        return render(
+            request,
+            "templateCrudUsuario/actualizar-usuario.html",
+            {"data": data, "errores": errores}
+        )
+
+    # ----------------------------
+    # PROCESAR EDICIÓN (POST)
+    # ----------------------------
+    data["Username"] = request.POST.get("Username", "")
+    correo = request.POST.get("CorreoElectronico", "").strip()
+    password = request.POST.get("Password", "").strip()
+    confirmar = request.POST.get("ConfirmarPassword", "").strip()
+
+    # ----------------------------
+    # VALIDACIONES
+    # ----------------------------
+    if not correo:
+        errores["CorreoElectronico"] = ["El correo es obligatorio"]
+
+    if password or confirmar:
+        if password != confirmar:
+            errores["ConfirmarPassword"] = ["Las contraseñas no coinciden"]
+
+    if errores:
+        return render(
+            request,
+            "templateCrudUsuario/actualizar-usuario.html",
+            {
+                "data": {
+                    "Username": data["Username"],
+                    "CorreoElectronico": correo
+                },
+                "errores": errores
+            }
+        )
+
+    # ----------------------------
+    # PAYLOAD (solo editable)
+    # ----------------------------
+    payload = {
+        "CorreoElectronico": correo
     }
-    return render(request, 'templateCrudUsuario/registro-usuario.html', data)
 
+    if password:
+        payload["Password"] = password
 
-#Eliminar
+    try:
+        print("=== PAYLOAD EDICIÓN ===")
+        print(payload)
+
+        res = requests.patch(
+            f"{API_URL_USUARIOS}{IdUsuarios}/",
+            json=payload,
+            headers=get_headers(request)
+        )
+
+        print(f"STATUS: {res.status_code}")
+        print(f"RESPONSE: {res.text}")
+
+        if res.status_code in (200, 202):
+            messages.success(request, "Usuario actualizado correctamente")
+            return redirect("admin-crud-usuario")
+
+        errores.update(res.json())
+
+    except Exception as e:
+        print(e)
+        errores["general"] = ["Error al conectar con la API"]
+
+    return render(
+        request,
+        "templateCrudUsuario/actualizar-usuario.html",
+        {
+            "data": {
+                "Username": data["Username"],
+                "CorreoElectronico": correo
+            },
+            "errores": errores
+        }
+    )
+
+# ----------------------------
+# DETALLE USUARIO
+# ----------------------------
+@solo_admin
+def detalleUsuario(request, IdUsuarios):
+    headers = get_headers(request)
+    usuario = {}
+    Empleados, Cargos, SuperUsuarios = [], [], []
+
+    try:
+        res_usu = requests.get(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=headers)
+        usuario = res_usu.json() if res_usu.status_code == 200 else {}
+
+        res_emp = requests.get(API_URL_EMPLEADOS, headers=headers)
+        Empleados = res_emp.json() if res_emp.status_code == 200 else []
+
+        res_car = requests.get(API_URL_CARGOS, headers=headers)
+        Cargos = res_car.json() if res_car.status_code == 200 else []
+
+        res_su = requests.get(API_URL_AUTHUSER, headers=headers)
+        SuperUsuarios = res_su.json() if res_su.status_code == 200 else []
+    except:
+        messages.error(request, "No se pudo obtener la información desde la API.")
+
+    return render(request, 'templateCrudUsuario/detalle-usuario.html', 
+                  {"usu": usuario, "Empleados": Empleados, "Cargos": Cargos, "SuperUsuarios": SuperUsuarios})
+
+# ----------------------------
+# CONFIRMAR ELIMINACIÓN
+# ----------------------------
 @solo_admin
 def confirmarEliminar(request, IdUsuarios):
-    """
-    Vista que muestra una confirmación antes de eliminar un usuario.
-    Esto evita eliminaciones accidentales.
-    """
-    usuario = Usuarios.objects.get(IdUsuarios=IdUsuarios)
-    data = {'usu' : usuario}
-    return render(request, 'templateCrudUsuario/confirmar-eliminar.html', data)
+    try:
+        res = requests.get(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=get_headers(request))
+        usuario = res.json() if res.status_code == 200 else None
+    except:
+        usuario = None
+    return render(request, 'templateCrudUsuario/confirmar-eliminar.html', {"usu": usuario})
 
-
+# ----------------------------
+# ELIMINAR USUARIO
+# ----------------------------
 @solo_admin
 def eliminarUsuario(request, IdUsuarios):
-    """
-    Vista que realiza la eliminación real del usuario.
-    Solo permite el método POST como medida de seguridad.
-    """
-    usuario = Usuarios.objects.get(IdUsuarios=IdUsuarios)
-
-    if request.method == 'POST':
-        # Registra la auditoría antes de eliminar
-        RegistrarAuditoriaUsuario(request, usuario, "ELIMINAR")
-
-        usuario.delete()  # Elimina el usuario
-        messages.success(request, f"El usuario '{usuario.Username}' fue eliminado correctamente.")
-
-        return redirect('admin-crud-usuario')
-
-    else:
-        # Si alguien intenta eliminar mediante GET, se bloquea por seguridad
+    if request.method != "POST":
         messages.error(request, "Método no permitido para eliminar usuarios.")
         return redirect('admin-crud-usuario')
 
+    try:
+        res = requests.delete(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=get_headers(request))
+        if res.status_code in (200, 204):
+            messages.success(request, "Usuario eliminado correctamente")
+        else:
+            messages.error(request, f"No se pudo eliminar: {res.text}")
+    except:
+        messages.error(request, "Error al conectar con la API")
 
-#Detalle
-@solo_admin
-def detalleUsuario(request, IdUsuarios):
-    """
-    Vista que muestra el detalle completo de un usuario específico.
-    """
-    usuario = Usuarios.objects.get(IdUsuarios=IdUsuarios)
-    data = {'usu' : usuario}
-    return render(request, 'templateCrudUsuario/detalle-usuario.html', data)
-
-
+    return redirect('admin-crud-usuario')

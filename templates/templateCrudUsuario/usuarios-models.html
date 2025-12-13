@@ -1,75 +1,70 @@
 {% extends 'base-crud.html' %}
-<!-- Extiende la plantilla base 'base-crud.html', que contiene la estructura general, estilos, scripts y manejo de mensajes -->
+<!-- Extiende la plantilla base que contiene la estructura general, estilos y scripts comunes -->
 
 {% block title %}Lista de Usuarios{% endblock %}
-<!-- Define el título de la página que se mostrará en la pestaña del navegador -->
+<!-- Define el título de la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Bloque de navegación (breadcrumbs) que indica la ruta dentro del sistema -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace a la página principal del admin -->
-        <a>Crud usuarios > </a> <!-- Página actual, sin enlace -->
-    </li>
-{% endblock %}
+
+{% if messages %}
+<section class="messages">
+    {% for message in messages %}
+        <div class="message">
+            <h1>{{ message }}</h1>
+        </div>
+    {% endfor %}
+</section>
+{% endif %}
 
 {% block header_title %}
-    <!-- Título principal dentro de la página -->
-    <h1 class="header-title">LISTA DE USUARIOS</h1>
-    
-    <!-- Botones de navegación rápidos -->
-    <a href="{% url 'adminhome' %}"><button class="button-header" type="button">VOLVER</button></a>
-    <a href="{% url 'admin-registrar-usuario' %}"><button class="button-header" type="button">REGISTRAR USUARIO</button></a>
+<h1 class="header-title">LISTA DE USUARIOS</h1>
+
+<a href="{% url 'adminhome' %}">
+    <button class="button-header" type="button">Volver al Inicio</button>
+</a>
+<a href="{% url 'admin-registrar-usuario' %}">
+    <button class="button-header" type="button">REGISTRAR</button>
+</a>
 {% endblock %}
 
 {% block content %}
-    <!-- Bloque principal de contenido dinámico -->
-    
-    {% if Usuarios %}
-        <!-- Si existen usuarios registrados, se muestra la tabla -->
-        <table>
-            <thead>
-                <tr>
-                    <!-- Encabezados de la tabla mostrando los campos de los usuarios -->
-                    <th>ID USUARIO</th>
-                    <th>Username</th>
-                    <th>Correo Electronico</th>
-                    <th>Acciones</th> <!-- Columna para botones de acciones -->
-                </tr>
-            </thead>
-            <tbody>
-                {% for usu in Usuarios %}
-                    <!-- Itera sobre cada usuario y genera una fila por cada uno -->
-                    <tr>
-                        <td scope="row">{{ usu.IdUsuarios }}</td>
-                        <td>{{ usu.Username }}</td>
-                        <td>{{ usu.CorreoElectronico }}</td>
-                       
-                        <td>
-                            <!-- Botones de acción para cada usuario -->
-                            <a href="{% url 'admin-detalle-usuario' usu.IdUsuarios %}">
-                                <button>DETALLE</button>
-                            </a>
-                            <a href="{% url 'admin-actualizar-usuario' usu.IdUsuarios %}">
-                                <button>ACTUALIZAR</button>
-                            </a>
-
-                            {% if usu.Username == "Admin" %}
-                                <button disabled class="btn-disabled">ELIMINAR</button>
-                            {% else %}
-                                <a href="{% url 'admin-confirmar-eliminar-usuario' usu.IdUsuarios %}">
-                                    <button>ELIMINAR</button>
-                                </a>
-                            {% endif %}
-                        
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <!-- Si no hay usuarios registrados, muestra un mensaje informativo -->
-        <div class="no-registros">
-            <h1>NO HAY USUARIOS REGISTRADOS</h1>
-        </div>
-    {% endif %}
+{% if Usuarios %}
+<table>
+    <thead>
+        <tr>
+            <th>ID USUARIO</th>
+            <th>Username</th>
+            <th>Correo Electrónico</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for usu in Usuarios %}
+        <tr>
+            <td>{{ usu.IdUsuarios }}</td>
+            <td>{{ usu.Username }}</td>
+            <td>{{ usu.CorreoElectronico }}</td>
+            <td>
+                <a href="{% url 'admin-detalle-usuario' usu.IdUsuarios %}">
+                    <button class="button-header" type="button">DETALLE</button>
+                </a>
+                <a href="{% url 'admin-actualizar-usuario' usu.IdUsuarios %}">
+                    <button class="button-header" type="button">ACTUALIZAR</button>
+                </a>
+                {% if usu.Username == "Admin" %}
+                    <button class="button-header" type="button" disabled>ELIMINAR</button>
+                {% else %}
+                    <a href="{% url 'admin-confirmar-eliminar-usuario' usu.IdUsuarios %}">
+                        <button class="button-header" type="button">ELIMINAR</button>
+                    </a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="no-registros">
+    <h1>NO HAY USUARIOS REGISTRADOS</h1>
+</div>
+{% endif %}
 {% endblock %}

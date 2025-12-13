@@ -1,158 +1,184 @@
-# Importaciones necesarias
-from django.shortcuts import render, redirect  # 'render' para mostrar templates y 'redirect' para redirigir
+import requests
+from django.shortcuts import render, redirect
 from django.contrib import messages
-from AuditoriaApp.views import RegistrarAuditoriaProducto
 from LoginApp.decorators import login_requerido
 
-# ========================================================================
-# VISTA: Mostrar todos los productos
-# ========================================================================
+API_URL_PRODUCTOS = "http://127.0.0.1:8000/productos/"
+API_URL_CATEGORIAS = "http://127.0.0.1:8000/categoriaProducto/"
+API_URL_BODEGAS = "http://127.0.0.1:8000/bodegas/"
+
+def get_headers(request):
+    token = request.session.get("token")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+# ----------------------------
+# LISTAR PRODUCTOS
+# ----------------------------
 @login_requerido
 def productosData(request):
-    """
-    Obtiene todos los registros de productos de la base de datos
-    y los envía al template 'producto-models.html' para mostrarlos.
+    try:
+        res = requests.get(API_URL_PRODUCTOS, headers=get_headers(request))
+        productos = res.json() if res.status_code == 200 else []
+    except:
+        productos = []
+        messages.error(request, "No se pudo conectar con la API.")
+    return render(request, 'templateCrudProducto/productos-models.html', {"Productos": productos})
 
-    Parámetros:
-    - request: Objeto HttpRequest que contiene información sobre la solicitud HTTP.
-
-    Retorna:
-    - render: Renderiza el template con los datos de los productos.
-    """
-    productos = Productos.objects.all()  # Consulta todos los productos
-    data = {'Productos': productos}  # Diccionario con los datos para el template
-    return render(request, 'templateCrudProducto/productos-models.html', data)
-
-
-# ========================================================================
-# VISTA: Registro de un nuevo producto
-# ========================================================================
+# ----------------------------
+# REGISTRAR NUEVO PRODUCTO
+# ----------------------------
 @login_requerido
 def productosRegistrationView(request):
-    """
-    Permite registrar un nuevo producto mediante un formulario.
-    Si la solicitud es POST y el formulario es válido, guarda los datos
-    y redirige a la página de listado de productos.
+    try:
+        Categorias = requests.get(API_URL_CATEGORIAS, headers=get_headers(request)).json()
+        Bodegas = requests.get(API_URL_BODEGAS, headers=get_headers(request)).json()
+    except:
+        Categorias, Bodegas = [], []
+        messages.error(request, "No se pudieron cargar categorías o bodegas.")
 
-    Parámetros:
-    - request: Objeto HttpRequest que contiene información sobre la solicitud HTTP.
+    data, errores = {}, {}
 
-    Retorna:
-    - render: Renderiza el template 'registro-producto.html' con el formulario.
-    """
-    form = forms.ProductoRegistrationForm()  # Inicializa un formulario vacío
+    if request.method == "POST":
+        data = {
+            "CodigoDeBarras": request.POST.get("CodigoDeBarras", "").strip(),
+            "NombreProducto": request.POST.get("NombreProducto", "").strip(),
+            "MarcaProducto": request.POST.get("MarcaProducto", "").strip(),
+            "FechaDeVencimiento": request.POST.get("FechaDeVencimiento", "").strip(),
+        }
 
-    if request.method == 'POST':  # Verifica si se envió el formulario
-        form = forms.ProductoRegistrationForm(request.POST)  # Crea un formulario con los datos enviados
-        if form.is_valid():  # Valida los datos del formulario
-            # Imprime en consola los datos validados para depuración
-            print("FORM ES VALIDO")
-            print("CODIGO DE BARRAS: ", form.cleaned_data['CodigoDeBarras'])
-            print("VALOR: ", form.cleaned_data['ValorProducto'])
-            print("STOCK: ", form.cleaned_data['StockProducto'])
-            print("NOMBRE DEL PRODUCTO: ", form.cleaned_data['NombreProducto'])
-            print("MARCA: ", form.cleaned_data['MarcaProducto'])
-            print("FECHA DE VENCIMIENTO: ", form.cleaned_data['FechaDeVencimiento'])
-            print("CATEGORIA DEL PRODUCTO: ", form.cleaned_data['CategoriaProducto'])
-            print("BODEGA ASOCIADA: ", form.cleaned_data['Bodegas'])
+        for campo in ["ValorProducto", "StockProducto", "CategoriaProducto", "Bodegas"]:
+            try:
+                data[campo] = int(request.POST.get(campo))
+            except (ValueError, TypeError):
+                data[campo] = None
 
-            producto_nuevo = form.save()  # Guarda el nuevo producto en la base de datos
-            RegistrarAuditoriaProducto(request, producto_nuevo, "REGISTRAR")
-            messages.success(request, "Producto registrado correctamente")
-            
-            # ========================================================================
-            # METODO DE REDIRECCION MEDIANTE USUARIO LOGGEADO
-            # ========================================================================
-            UsuarioLogeado = request.session.get('Usuario_Username')
-            if UsuarioLogeado == "Admin":
-                #Accede a la ruta nombrada de urls_admin.py, nombrada como name='admin-crud-producto'
-                return redirect('admin-crud-producto')
-            else:
-                return redirect('crud-producto')
-            # ========================================================================
-        else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-    
-    data = {'form': form,}  # Diccionario con el formulario
-    return render(request, 'templateCrudProducto/registro-producto.html', data)
+        for campo in ["CodigoDeBarras", "NombreProducto", "ValorProducto", "StockProducto",
+                      "MarcaProducto", "FechaDeVencimiento", "CategoriaProducto", "Bodegas"]:
+            if not data.get(campo):
+                errores[campo] = [f"El campo {campo} es obligatorio"]
 
+        if not errores:
+            try:
+                res = requests.post(API_URL_PRODUCTOS, json=data, headers=get_headers(request))
+                if res.status_code == 201:
+                    messages.success(request, "Producto registrado correctamente")
+                    usuario = request.session.get("Usuario_Username")
+                    return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')
+                errores.update(res.json())
+            except:
+                errores["general"] = ["Error al conectar con la API"]
 
-# ========================================================================
-# VISTA: Actualizar un producto existente
-# ========================================================================
+    return render(request, 'templateCrudProducto/registro-producto.html',
+                  {"data": data, "errores": errores, "Categorias": Categorias, "Bodegas": Bodegas})
+
+# ----------------------------
+# ACTUALIZAR PRODUCTO
+# ----------------------------
 @login_requerido
 def actualizarProducto(request, IdProducto):
-    """
-    Permite actualizar los datos de un producto existente.
+    try:
+        Categorias = requests.get(API_URL_CATEGORIAS, headers=get_headers(request)).json()
+        Bodegas = requests.get(API_URL_BODEGAS, headers=get_headers(request)).json()
+    except:
+        Categorias, Bodegas = [], []
+        messages.error(request, "No se pudieron cargar categorías o bodegas.")
 
-    Parámetros:
-    - request: Objeto HttpRequest con información de la solicitud.
-    - IdProducto: Identificador único del producto a actualizar.
+    if request.method == "GET":
+        try:
+            res = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=get_headers(request))
+            data = res.json() if res.status_code == 200 else {}
+        except:
+            data = {}
+            messages.error(request, "No se pudo cargar el producto.")
+        return render(request, 'templateCrudProducto/registro-producto.html',
+                      {"data": data, "errores": {}, "Categorias": Categorias, "Bodegas": Bodegas})
 
-    Retorna:
-    - render: Renderiza el template 'registro-producto.html' con el formulario.
-    """
-    producto = Productos.objects.get(IdProducto=IdProducto)  # Obtiene el producto por su ID
-    form = forms.ProductoRegistrationForm(instance=producto)  # Formulario precargado con datos del producto
+    data = {
+        "CodigoDeBarras": request.POST.get("CodigoDeBarras", "").strip(),
+        "NombreProducto": request.POST.get("NombreProducto", "").strip(),
+        "MarcaProducto": request.POST.get("MarcaProducto", "").strip(),
+        "FechaDeVencimiento": request.POST.get("FechaDeVencimiento", "").strip(),
+    }
 
-    if request.method == 'POST':  # Si se envían datos para actualizar
-        form = forms.ProductoRegistrationForm(request.POST, instance=producto)
-        if form.is_valid():
-            producto_actualizar = form.save()  # Guarda los cambios en la base de datos
-            RegistrarAuditoriaProducto(request, producto_actualizar, "ACTUALIZAR")
-            messages.success(request, "Producto Actualizado correctamente")
+    for campo in ["ValorProducto", "StockProducto", "CategoriaProducto", "Bodegas"]:
+        try:
+            data[campo] = int(request.POST.get(campo))
+        except (ValueError, TypeError):
+            data[campo] = None
 
-            # ========================================================================
-            # METODO DE REDIRECCION MEDIANTE USUARIO LOGGEADO
-            # ========================================================================
-            UsuarioLogeado = request.session.get('Usuario_Username')
-            if UsuarioLogeado == "Admin":
-                #Accede a la ruta nombrada de urls_admin.py, nombrada como name='admin-crud-producto'
-                return redirect('admin-crud-producto')
-            else:
-                return redirect('crud-producto')
-            # ========================================================================
-        else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-            
-    data = {'form': form,}  # Diccionario con el formulario
-    return render(request, 'templateCrudProducto/registro-producto.html', data)
+    errores = {}
+    for campo in ["CodigoDeBarras", "NombreProducto", "ValorProducto", "StockProducto",
+                  "MarcaProducto", "FechaDeVencimiento", "CategoriaProducto", "Bodegas"]:
+        if not data.get(campo):
+            errores[campo] = [f"El campo {campo} es obligatorio"]
 
+    if not errores:
+        try:
+            res = requests.put(f"{API_URL_PRODUCTOS}{IdProducto}/", json=data, headers=get_headers(request))
+            if res.status_code in (200, 202):
+                messages.success(request, "Producto actualizado correctamente")
+                usuario = request.session.get("Usuario_Username")
+                return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')
+            errores.update(res.json())
+        except:
+            errores["general"] = ["Error al conectar con la API"]
 
-# ========================================================================
-# VISTA: Eliminar un producto
-# ========================================================================
+    return render(request, 'templateCrudProducto/registro-producto.html',
+                  {"data": data, "errores": errores, "Categorias": Categorias, "Bodegas": Bodegas})
 
-@login_requerido
-def confirmarEliminar(request, IdProducto):
-    producto = Productos.objects.get(IdProducto=IdProducto)
-    data = {'pro' : producto}
-    return render(request, 'templateCrudProducto/confirmar-eliminar.html', data)
-
-@login_requerido
-def eliminarProducto(request, IdProducto):
-    producto = Productos.objects.get(IdProducto=IdProducto)
-    if request.method == 'POST':
-        RegistrarAuditoriaProducto(request, producto, "ELIMINAR")
-        producto.delete()
-        messages.success(request, f"El producto '{producto.NombreProducto}' fue eliminado correctamente.")
-        
-        # ========================================================================
-        # METODO DE REDIRECCION MEDIANTE USUARIO LOGGEADO
-        # ========================================================================
-        UsuarioLogeado = request.session.get('Usuario_Username')
-        if UsuarioLogeado == "Admin":
-            #Accede a la ruta nombrada de urls_admin.py, nombrada como name='admin-crud-producto'
-            return redirect('admin-crud-producto')
-        else:
-            return redirect('crud-producto')
-        # ========================================================================
-    else:
-        messages.error(request, "Método no permitido para eliminar usuarios.")
-
-#Detalle
+# ----------------------------
+# DETALLE DEL PRODUCTO
+# ----------------------------
 @login_requerido
 def detalleProducto(request, IdProducto):
-    producto = Productos.objects.get(IdProducto=IdProducto)
-    data = {'pro' : producto}
-    return render(request, 'templateCrudProducto/detalle-producto.html', data)
+    headers = get_headers(request)
+    producto = {}
+    Categorias, Bodegas = [], []
+
+    try:
+        res_pro = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=headers)
+        producto = res_pro.json() if res_pro.status_code == 200 else {}
+
+        res_cat = requests.get(API_URL_CATEGORIAS, headers=headers)
+        Categorias = res_cat.json() if res_cat.status_code == 200 else []
+
+        res_bod = requests.get(API_URL_BODEGAS, headers=headers)
+        Bodegas = res_bod.json() if res_bod.status_code == 200 else []
+    except Exception as e:
+        messages.error(request, "No se pudo obtener la información desde la API.")
+
+    return render(request, 'templateCrudProducto/detalle-producto.html', 
+                  {"pro": producto, "Categorias": Categorias, "Bodegas": Bodegas})
+# ----------------------------
+# CONFIRMAR ELIMINACIÓN
+# ----------------------------
+@login_requerido
+def confirmarEliminar(request, IdProducto):
+    try:
+        res = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=get_headers(request))
+        producto = res.json() if res.status_code == 200 else None
+    except:
+        producto = None
+    return render(request, 'templateCrudProducto/confirmar-eliminar.html', {"pro": producto})
+
+# ----------------------------
+# ELIMINAR PRODUCTO
+# ----------------------------
+@login_requerido
+def eliminarProducto(request, IdProducto):
+    if request.method != "POST":
+        messages.error(request, "Método no permitido para eliminar productos.")
+        usuario = request.session.get("Usuario_Username")
+        return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')
+
+    try:
+        res = requests.delete(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=get_headers(request))
+        if res.status_code in (200, 204):
+            messages.success(request, "Producto eliminado correctamente")
+        else:
+            messages.error(request, f"No se pudo eliminar: {res.text}")
+    except:
+        messages.error(request, "Error al conectar con la API")
+
+    usuario = request.session.get("Usuario_Username")
+    return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')

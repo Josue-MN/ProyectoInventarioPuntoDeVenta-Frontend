@@ -2,19 +2,7 @@
 
 {% block title %}Confirmar Eliminación de Cargo{% endblock %}
 
-{% block breadcrumb %}
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
-            <a>Confirmar Eliminación</a>
-        {% else %}
-            <a href="{% url 'adminhome' %}">Home ></a>
-            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
-            <a>Confirmar Eliminación</a>
-        {% endif %}
-    </li>
-{% endblock %}
+
 
 {% block header_title %}
     <h1 class="header-title">CONFIRMACIÓN DE ELIMINACIÓN</h1>

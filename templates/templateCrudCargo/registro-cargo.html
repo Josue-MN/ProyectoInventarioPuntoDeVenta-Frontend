@@ -3,19 +3,6 @@
 
 {% block title %}Registro de Cargos{% endblock %}
 
-{% block breadcrumb %}
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
-            <a>Formulario Cargos</a>
-        {% else %}
-            <a href="{% url 'adminhome' %}">Home ></a>
-            <a href="{% url 'admin-crud-cargo' %}">Crud Cargos ></a>
-            <a>Formulario Cargos</a>
-        {% endif %}
-    </li>
-{% endblock %}
 
 {% block extra_messages %}
     {% if errores %}

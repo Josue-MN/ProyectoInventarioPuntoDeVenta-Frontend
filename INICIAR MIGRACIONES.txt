@@ -2,16 +2,4 @@ UTILIZAR:
 
 #utilizar cmd: 
 
-python manage.py makemigrations
-
-#al ultimo aplicar: 
-
-python manage.py migrate
-
-despues: 
-
-python manage.py createsuperuser
-
-finalizando:
-
-python manage.py runserver 8080
+python manage.py runserver 7000

@@ -1,89 +1,76 @@
 {% extends 'base-crud.html' %}
 <!-- Extiende la plantilla base para CRUD que incluye estilos, scripts y estructura general -->
 
-{% block title %}Lista de Categorias{% endblock %}
+{% block title %}Lista de Categorías{% endblock %}
 <!-- Título de la página que se mostrará en la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Breadcrumbs: ruta de navegación dentro del panel de administración -->
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a>Crud Categoria > </a>
-        {% else %}
-            <a href="{% url 'home' %}">Home ></a>
-            <a>Crud Categoria > </a>
-        {% endif %}
-    </li>
-{% endblock %}
+{% if messages %}
+<section class="messages">
+    {% for message in messages %}
+        <div class="message">
+            <h1>{{ message }}</h1>
+        </div>
+    {% endfor %}
+</section>
+{% endif %}
 
 {% block header_title %}
     <!-- Título principal de la página y botones de navegación -->
-    <h1 class="header-title">LISTA DE CATEGORIAS</h1>
+    <h1 class="header-title">LISTA DE CATEGORÍAS</h1>
 
-    {% if request.session.Usuario_Username == "Admin" %}
+    {% if request.session.Usuario_Username == "admin" %}
         <a href="{% url 'adminhome' %}">
             <button class="button-header" type="button">Volver al Panel Admin</button>
+        </a>
+        <a href="{% url 'admin-registrar-categoria' %}">
+            <button class="button-header" type="button">REGISTRAR</button>
         </a>
     {% else %}
         <a href="{% url 'home' %}">
             <button class="button-header" type="button">Volver al Inicio</button>
         </a>
-    {% endif %}
-
-    <!-- Botón para registrar una nueva categoria -->
-
-    {% if request.session.Usuario_Username == "Admin" %}
-        <a href="{% url 'admin-registrar-categoria' %}">
-            <button class="button-header" type="button">REGISTRAR</button>
-        </a>
-    {% else %}
-        <a href="{% url 'registrar-categoria' %}" >
+        <a href="{% url 'registrar-categoria' %}">
             <button class="button-header" type="button">REGISTRAR</button>
         </a>
     {% endif %}
-
 {% endblock %}
 
 {% block content %}
     <!-- Contenido principal: lista de categorías -->
     {% if CategoriaProducto %}
-        <!-- Si hay categorías registradas -->
         <table>
             <thead>
                 <tr>
-                    <th>ID CATEGORIA PRODUCTO</th>
-                    <th>Nombre Categoria</th>
-                    <th>Descripcion Categoria</th>
+                    <th>ID CATEGORÍA</th>
+                    <th>Nombre Categoría</th>
+                    <th>Descripción</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Recorre todas las categorías y muestra sus datos -->
                 {% for bod in CategoriaProducto %}
                 <tr>
-                    <td>{{ bod.IdCategoriaProducto}}</td>
+                    <td>{{ bod.IdCategoriaProducto }}</td>
                     <td>{{ bod.NombreCategoria }}</td>
                     <td>{{ bod.Descripcion }}</td>
                     <td>{{ bod.Estado }}</td>
-                    <!-- Botones de acción: Detalle, Actualizar, Eliminar -->
                     <td>
-                        {% if request.session.Usuario_Username == "Admin" %}
+                        {% if request.session.Usuario_Username == "admin" %}
                             <a href="{% url 'admin-detalle-categoria' bod.IdCategoriaProducto %}">
                                 <button class="button-header" type="button">DETALLE</button>
                             </a>
-                            <a href="{% url 'admin-actualizar-categoria' bod.IdCategoriaProducto %}" >
+                            <a href="{% url 'admin-actualizar-categoria' bod.IdCategoriaProducto %}">
                                 <button class="button-header" type="button">ACTUALIZAR</button>
                             </a>
-                            <a href="{% url 'admin-confirmar-eliminar-categoria' bod.IdCategoriaProducto %}" >
+                            <a href="{% url 'admin-confirmar-eliminar-categoria' bod.IdCategoriaProducto %}">
                                 <button class="button-header" type="button">ELIMINAR</button>
                             </a>
                         {% else %}
-                            <a href="{% url 'detalle-categoria' bod.IdCategoriaProducto %}" >
+                            <a href="{% url 'detalle-categoria' bod.IdCategoriaProducto %}">
                                 <button class="button-header" type="button">DETALLE</button>
                             </a>
-                            <a href="{% url 'actualizar-categoria' bod.IdCategoriaProducto %}" >
+                            <a href="{% url 'actualizar-categoria' bod.IdCategoriaProducto %}">
                                 <button class="button-header" type="button">ACTUALIZAR</button>
                             </a>
                             <a href="{% url 'confirmar-eliminar-categoria' bod.IdCategoriaProducto %}">
@@ -96,9 +83,8 @@
             </tbody>
         </table>
     {% else %}
-        <!-- Mensaje cuando no hay categorías registradas -->
         <div class="no-registros">
-            <h1>NO HAY CATEGORIAS REGISTRADAS</h1>
+            <h1>NO HAY CATEGORÍAS REGISTRADAS</h1>
         </div>
     {% endif %}
 {% endblock %}

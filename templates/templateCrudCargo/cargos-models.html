@@ -2,17 +2,7 @@
 
 {% block title %}Lista de Cargos{% endblock %}
 
-{% block breadcrumb %}
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a>Crud Cargos ></a>
-        {% else %}
-            <a href="{% url 'home' %}">Home ></a>
-            <a>Crud Cargos ></a>
-        {% endif %}
-    </li>
-{% endblock %}
+
 
 {% if messages %}
 <section class="messages">

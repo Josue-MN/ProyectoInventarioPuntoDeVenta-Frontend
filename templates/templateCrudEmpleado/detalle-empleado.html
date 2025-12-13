@@ -1,58 +1,61 @@
 {% extends 'base-crud.html' %}
 <!-- Extiende la plantilla base de CRUD que incluye estilos, scripts y estructura general -->
 
-{% block title %}Detalle de empleado{% endblock %}
-<!-- Título de la página que se mostrará en la pestaña del navegador -->
+{% block title %}Detalle de Empleado{% endblock %}
 
-{% block breadcrumb %}
-    <!-- Breadcrumbs: muestran la ruta de navegación dentro del panel de administración -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel -->
-        <a href="{% url 'admin-crud-empleado' %}">Crud empleado > </a> <!-- Enlace a la sección de empleados -->
-        <a>Detalle empleado</a> <!-- Página actual sin enlace -->
-    </li>
-{% endblock %}
 
 {% block header_title %}
-    <!-- Título principal que aparece en la cabecera de la página -->
-    <h1 class="header-title">DETALLE DE EMPLEADOS</h1>
-    <!-- Botón para regresar al listado de empleados -->
-    <a href="{% url 'admin-crud-empleado' %}"><button class="button-header" type="button">VOLVER</button></a>
+<h1 class="header-title">DETALLE DE EMPLEADO</h1>
+{% if request.session.Usuario_Username == "Admin" %}
+    <a href="{% url 'admin-crud-empleado' %}">
+        <button class="button-header" type="button">Volver al Panel Admin</button>
+    </a>
+{% else %}
+    <a href="{% url 'admin-crud-empleado' %}">
+        <button class="button-header" type="button">Volver al Inicio</button>
+    </a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Contenido principal: tabla con los detalles del empleado seleccionado -->
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>RUT</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Edad</th>
-                <th>Telefono</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <!-- Muestra los datos del empleado pasado al template -->
-                <td scope="row">{{ emp.IdEmpleado }}</td>
-                <td>{{ emp.RutEmpleado }}</td>
-                <td>{{ emp.NombreEmpleado }}</td>
-                <td>{{ emp.ApellidoEmpleado }}</td>
-                <td>{{ emp.EdadEmpleado }}</td>
-                <td>{{ emp.NumeroTelefonoEmpleado }}</td>
-                <!-- Enlaces para actualizar o eliminar el empleado -->
-                <td>
-                    <!-- Botón para actualizar el empleado con confirmación -->
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>RUT</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Edad</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ emp.IdEmpleado }}</td>
+            <td>{{ emp.RutEmpleado }}</td>
+            <td>{{ emp.NombreEmpleado }}</td>
+            <td>{{ emp.ApellidoEmpleado }}</td>
+            <td>{{ emp.EdadEmpleado }}</td>
+            <td>{{ emp.NumeroTelefonoEmpleado }}</td>
+            <td>
+                {% if request.session.Usuario_Username == "Admin" %}
                     <a href="{% url 'admin-actualizar-empleado' emp.IdEmpleado %}">
-                        <button onclick="return confirm('¿Seguro que deseas actualizar este empleado?')">ACTUALIZAR</button>
+                        <button class="button-header" type="button">ACTUALIZAR</button>
                     </a>
-                    <!-- Botón para eliminar el empleado -->
-                    <a href="{% url 'admin-confirmar-eliminar-empleado' emp.IdEmpleado %}"><button>ELIMINAR</button></a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                    <a href="{% url 'admin-confirmar-eliminar-empleado' emp.IdEmpleado %}">
+                        <button class="button-header" type="button">ELIMINAR</button>
+                    </a>
+                {% else %}
+                    <a href="{% url 'admin-actualizar-empleado' emp.IdEmpleado %}">
+                        <button class="button-header" type="button">ACTUALIZAR</button>
+                    </a>
+                    <a href="{% url 'admin-confirmar-eliminar-empleado' emp.IdEmpleado %}">
+                        <button class="button-header" type="button">ELIMINAR</button>
+                    </a>
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
 {% endblock %}

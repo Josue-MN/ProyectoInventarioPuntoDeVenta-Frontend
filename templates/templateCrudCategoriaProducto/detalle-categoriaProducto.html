@@ -1,79 +1,60 @@
 {% extends 'base-crud.html' %}
 <!-- Extiende la plantilla base de CRUD, que incluye estilos, scripts y la estructura general -->
 
-{% block title %}Detalles de Categorias{% endblock %}
+{% block title %}Detalle de Categoría{% endblock %}
 <!-- Título de la página que se muestra en la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Breadcrumbs: ruta de navegación dentro del panel de administración -->
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a href="{% url 'admin-crud-categoria' %}">Crud Categoria > </a>
-            <a>Detalle categoria</a>
-        {% else %}
-            <a href="{% url 'home' %}">Home ></a>
-            <a href="{% url 'crud-categoria' %}">Crud Categoria > </a>
-            <a>Detalle categoria</a>
-        {% endif %}
-    </li>
-{% endblock %}
 
 {% block header_title %}
-    <!-- Título principal de la página -->
-    <h1 class="header-title">DETALLES DE CATEGORIAS</h1>
-    <!-- Botón para volver al listado de categorías -->
-    {% if request.session.Usuario_Username == "Admin" %}
-        <a href="{% url 'admin-crud-categoria' %}">
-            <button class="button-header" type="button">Volver al Panel Admin</button>
-        </a>
-    {% else %}
-        <a href="{% url 'crud-categoria' %}">
-            <button class="button-header" type="button">Volver al Inicio</button>
-        </a>
-    {% endif %}
+<h1 class="header-title">DETALLE DE CATEGORÍA</h1>
+{% if request.session.Usuario_Username == "admin" %}
+    <a href="{% url 'admin-crud-categoria' %}">
+        <button class="button-header" type="button">Volver al Panel Admin</button>
+    </a>
+{% else %}
+    <a href="{% url 'crud-categoria' %}">
+        <button class="button-header" type="button">Volver al Inicio</button>
+    </a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Contenido principal: muestra los detalles de la categoría seleccionada -->
-    <table>
-        <thead>
-            <tr>
-                <th>ID CATEGORIA PRODUCTO</th>
-                <th>Nombre Categoria</th>
-                <th>Descripcion Categoria</th>
-                <th>Estado</th>
-                <th>Observaciones</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <!-- Datos de la categoría -->
-                <td>{{ bod.IdCategoriaProducto}}</td>
-                <td>{{ bod.NombreCategoria }}</td>
-                <td>{{ bod.Descripcion }}</td>
-                <td>{{ bod.Estado }}</td>
-                <td>{{ bod.Observaciones }}</td>
-                <!-- Botones para actualizar o eliminar la categoría -->
-                <td>
-                    {% if request.session.Usuario_Username == "Admin" %}
-                        <a href="{% url 'admin-actualizar-categoria' bod.IdCategoriaProducto %}" >
-                            <button class="button-header" type="button">ACTUALIZAR</button>
-                        </a>
-                        <a href="{% url 'admin-confirmar-eliminar-categoria' bod.IdCategoriaProducto %}" >
-                            <button class="button-header" type="button">ELIMINAR</button>
-                        </a>
-                    {% else %}
-                        <a href="{% url 'actualizar-categoria' bod.IdCategoriaProducto %}" >
-                            <button class="button-header" type="button">ACTUALIZAR</button>
-                        </a>
-                        <a href="{% url 'confirmar-eliminar-categoria' bod.IdCategoriaProducto %}" >
-                            <button class="button-header" type="button">ELIMINAR</button>
-                        </a>
-                    {% endif %}
-                </td>
-            </tr>
-        </tbody>
-    </table>
+<table>
+    <thead>
+        <tr>
+            <th>ID CATEGORÍA PRODUCTO</th>
+            <th>Nombre Categoría</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+            <th>Observaciones</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ bod.IdCategoriaProducto }}</td>
+            <td>{{ bod.NombreCategoria }}</td>
+            <td>{{ bod.Descripcion }}</td>
+            <td>{{ bod.Estado }}</td>
+            <td>{{ bod.Observaciones }}</td>
+            <td>
+                {% if request.session.Usuario_Username == "admin" %}
+                    <a href="{% url 'admin-actualizar-categoria' bod.IdCategoriaProducto %}">
+                        <button class="button-header" type="button">ACTUALIZAR</button>
+                    </a>
+                    <a href="{% url 'admin-confirmar-eliminar-categoria' bod.IdCategoriaProducto %}">
+                        <button class="button-header" type="button">ELIMINAR</button>
+                    </a>
+                {% else %}
+                    <a href="{% url 'actualizar-categoria' bod.IdCategoriaProducto %}">
+                        <button class="button-header" type="button">ACTUALIZAR</button>
+                    </a>
+                    <a href="{% url 'confirmar-eliminar-categoria' bod.IdCategoriaProducto %}">
+                        <button class="button-header" type="button">ELIMINAR</button>
+                    </a>
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
 {% endblock %}

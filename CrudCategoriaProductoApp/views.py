@@ -1,144 +1,146 @@
+import requests
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from AuditoriaApp.views import RegistrarAuditoriaCategoria
 from LoginApp.decorators import login_requerido
 
+API_URL = "http://127.0.0.1:8000/categoriaProducto/"  # Cambia según tu API
 
-# Create your views here.
+# ----------------------------------------------------------
+# FUNCIONES AUXILIARES
+# ----------------------------------------------------------
+def get_headers(request):
+    token = request.session.get("token")
+    if not token:
+        return {}
+    return {"Authorization": f"Bearer {token}"}
 
-# --------------------------------------------------------------------
-# Vista para mostrar todos los registros de CategoriaProducto
+# ----------------------------------------------------------
+# LISTAR CATEGORÍAS
+# ----------------------------------------------------------
 @login_requerido
 def categoriaProductoData(request):
-    # Obtiene todos los objetos de la tabla CategoriaProducto
-    categoriaProducto = CategoriaProducto.objects.all()
-    
-    # Prepara los datos para enviarlos al template
-    data = {'CategoriaProducto': categoriaProducto}
-    
-    # Renderiza la plantilla con los datos
-    return render(request, 'templateCrudCategoriaProducto/categoriaProducto-models.html', data)
+    try:
+        headers = get_headers(request)
+        response = requests.get(API_URL, headers=headers)
 
-# --------------------------------------------------------------------
-# Vista para registrar una nueva categoría de producto
+        if response.status_code == 401:
+            messages.error(request, "No autorizado. Debes iniciar sesión nuevamente.")
+            return redirect("Login")
+        
+        categorias = response.json()
+    except Exception as e:
+        print("ERROR LISTANDO CATEGORIAS:", e)
+        categorias = []
+        messages.error(request, "No se pudo conectar con la API.")
+
+    return render(request, 'templateCrudCategoriaProducto/categoriaProducto-models.html', {"CategoriaProducto": categorias})
+
+# ----------------------------------------------------------
+# REGISTRAR NUEVA CATEGORÍA
+# ----------------------------------------------------------
 @login_requerido
 def categoriaProductoRegistracionView(request):
-    # Inicializa el formulario vacío
-    form = forms.CategoriaProductoRegistracionForm()
 
-    # Verifica si se envió un POST (cuando se envía el formulario)
-    if request.method == 'POST':
-        form = forms.CategoriaProductoRegistracionForm(request.POST)
-        if form.is_valid():  # Si el formulario es válido
-            # Imprime los datos en consola (para depuración)
-            print("FORM VALIDO")
-            print("NOMBRE: ", form.cleaned_data['NombreCategoria'])
-            print("DESCRIPCION: ", form.cleaned_data['Descripcion'])
-            print("ESTADO: ", form.cleaned_data['Estado'])
-            print("OBSERVACIONES: ", form.cleaned_data['Observaciones'])
+    if request.method == "GET":
+        return render(request, 'templateCrudCategoriaProducto/registro-categoriaProducto.html', {"data": {}, "errores": {}})
 
-            # Guarda el nuevo registro en la base de datos
-            categoria_nueva = form.save()
-            RegistrarAuditoriaCategoria(request, categoria_nueva, "REGISTRAR")
-            # Muestra mensaje de éxito en la interfaz
-            messages.success(request, "Categoria registrada correctamente")
+    # POST → enviar datos a la API
+    data = {
+        "NombreCategoria": request.POST.get("NombreCategoria"),
+        "Descripcion": request.POST.get("Descripcion"),
+        "Estado": request.POST.get("Estado"),
+        "Observaciones": request.POST.get("Observaciones"),
+    }
 
-            # ========================================================================
-            # METODO DE REDIRECCION MEDIANTE USUARIO LOGGEADO
-            # ========================================================================
-            UsuarioLogeado = request.session.get('Usuario_Username')
-            if UsuarioLogeado == "Admin":
-                #Accede a la ruta nombrada de urls_admin.py, nombrada como name='admin-crud-producto'
-                return redirect('admin-crud-categoria')
-            else:
-                return redirect('crud-categoria')
-            # ========================================================================
-        else:
-            # Muestra mensaje de error si el formulario no es válido
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-    
-    # Datos a enviar al template
-    data = {'form': form}
-    return render(request, 'templateCrudCategoriaProducto/registro-categoriaProducto.html', data)
+    headers = get_headers(request)
+    res = requests.post(API_URL, json=data, headers=headers)
 
-# --------------------------------------------------------------------
-# Vista para actualizar una categoría de producto existente
+    if res.status_code == 201:
+        messages.success(request, "Categoría registrada correctamente")
+        usuario = request.session.get('Usuario_Username')
+        return redirect('admin-crud-categoria')
+
+    # Manejo de errores
+    try:
+        errores = res.json()
+    except:
+        errores = {"general": ["Error desconocido"]}
+    return render(request, 'templateCrudCategoriaProducto/registro-categoriaProducto.html', {"data": data, "errores": errores})
+
+# ----------------------------------------------------------
+# ACTUALIZAR CATEGORÍA
+# ----------------------------------------------------------
 @login_requerido
 def actualizarCategoriaProducto(request, IdCategoriaProducto):
-    # Obtiene el registro específico según su ID
-    categoriaProducto = CategoriaProducto.objects.get(IdCategoriaProducto=IdCategoriaProducto)
-    # Inicializa el formulario con los datos existentes
-    form = forms.CategoriaProductoRegistracionForm(instance=categoriaProducto)
+    headers = get_headers(request)
 
-    if request.method == 'POST':
-        # Vuelve a inicializar el formulario con los datos enviados
-        form = forms.CategoriaProductoRegistracionForm(request.POST, instance=categoriaProducto)
-        if form.is_valid():  # Si los datos son válidos
-            categoria_actualizar = form.save()  # Guarda los cambios
-            RegistrarAuditoriaCategoria(request, categoria_actualizar, "ACTUALIZAR")
-            messages.success(request, "Categoria actualizada correctamente")
+    if request.method == "GET":
+        res = requests.get(f"{API_URL}{IdCategoriaProducto}/", headers=headers)
+        categoria = res.json() if res.status_code == 200 else {}
+        return render(request, 'templateCrudCategoriaProducto/registro-categoriaProducto.html', {"data": categoria, "errores": {}})
 
-            # ========================================================================
-            # METODO DE REDIRECCION MEDIANTE USUARIO LOGGEADO
-            # ========================================================================
-            UsuarioLogeado = request.session.get('Usuario_Username')
-            if UsuarioLogeado == "Admin":
-                #Accede a la ruta nombrada de urls_admin.py, nombrada como name='admin-crud-producto'
-                return redirect('admin-crud-categoria')
-            else:
-                return redirect('crud-categoria')
-            # ========================================================================
-        else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-    
-    # Datos a enviar al template
-    data = {'form': form}
-    return render(request, 'templateCrudCategoriaProducto/registro-categoriaProducto.html', data)
+    # POST → enviar actualización a la API
+    data = {
+        "NombreCategoria": request.POST.get("NombreCategoria"),
+        "Descripcion": request.POST.get("Descripcion"),
+        "Estado": request.POST.get("Estado"),
+        "Observaciones": request.POST.get("Observaciones"),
+    }
 
-# --------------------------------------------------------------------
-# Vista para mostrar la confirmación antes de eliminar
-@login_requerido
-def confirmarEliminar(request, IdCategoriaProducto):
-    # Obtiene la categoría a eliminar según su ID
-    categoriaProducto = CategoriaProducto.objects.get(IdCategoriaProducto=IdCategoriaProducto)
-    
-    # Envía el objeto al template de confirmación
-    data = {'bod' : categoriaProducto}
-    return render(request, 'templateCrudCategoriaProducto/confirmar-eliminar.html', data)
+    res = requests.put(f"{API_URL}{IdCategoriaProducto}/", json=data, headers=headers)
+    if res.status_code in (200, 202):
+        messages.success(request, "Categoría actualizada correctamente")
+        usuario = request.session.get('Usuario_Username')
+        return redirect('admin-crud-categoria')
 
-# --------------------------------------------------------------------
-# Vista para eliminar la categoría de producto
-@login_requerido
-def eliminarCategoriaProducto(request, IdCategoriaProducto):
-    # Obtiene la categoría a eliminar
-    categoriaProducto = CategoriaProducto.objects.get(IdCategoriaProducto=IdCategoriaProducto)
-    
-    if request.method == 'POST':  # Solo permite eliminación vía POST
-        RegistrarAuditoriaCategoria(request, categoriaProducto, "ELIMINAR")
-        categoriaProducto.delete()  # Elimina el registro
-        messages.success(request, f"La categoria '{categoriaProducto.NombreCategoria}' fue eliminado correctamente.")
-        
-        # ========================================================================
-        # METODO DE REDIRECCION MEDIANTE USUARIO LOGGEADO
-        # ========================================================================
-        UsuarioLogeado = request.session.get('Usuario_Username')
-        if UsuarioLogeado == "Admin":
-            #Accede a la ruta nombrada de urls_admin.py, nombrada como name='admin-crud-producto'
-            return redirect('admin-crud-categoria')
-        else:
-            return redirect('crud-categoria')
-        # ========================================================================
-    else:
-        # Si no es método POST, muestra mensaje de error
-        messages.error(request, "Método no permitido para eliminar usuarios.")
+    # Manejo de errores
+    try:
+        errores = res.json()
+    except:
+        errores = {"general": ["Error desconocido"]}
+    return render(request, 'templateCrudCategoriaProducto/registro-categoriaProducto.html', {"data": data, "errores": errores})
 
-# --------------------------------------------------------------------
-# Vista para mostrar el detalle de una categoría de producto
+# ----------------------------------------------------------
+# DETALLE DE CATEGORÍA
+# ----------------------------------------------------------
 @login_requerido
 def detalleCategoriaProducto(request, IdCategoriaProducto):
-    # Obtiene la categoría específica
-    categoriaProducto = CategoriaProducto.objects.get(IdCategoriaProducto=IdCategoriaProducto)
-    
-    # Envía el objeto al template de detalle
-    data = {'bod' : categoriaProducto}
-    return render(request, 'templateCrudCategoriaProducto/detalle-categoriaProducto.html', data)
+    headers = get_headers(request)
+    try:
+        res = requests.get(f"{API_URL}{IdCategoriaProducto}/", headers=headers)
+        categoria = res.json() if res.status_code == 200 else {}
+    except Exception as e:
+        print("ERROR DETALLE CATEGORIA:", e)
+        messages.error(request, "No se pudo obtener la información desde la API.")
+        return redirect("admin-crud-categoria")
+    return render(request, 'templateCrudCategoriaProducto/detalle-categoriaProducto.html', {"bod": categoria})
+
+# ----------------------------------------------------------
+# CONFIRMAR ELIMINACIÓN
+# ----------------------------------------------------------
+@login_requerido
+def confirmarEliminar(request, IdCategoriaProducto):
+    headers = get_headers(request)
+    res = requests.get(f"{API_URL}{IdCategoriaProducto}/", headers=headers)
+    categoria = res.json() if res.status_code == 200 else None
+    return render(request, 'templateCrudCategoriaProducto/confirmar-eliminar.html', {"bod": categoria})
+
+# ----------------------------------------------------------
+# ELIMINAR CATEGORÍA
+# ----------------------------------------------------------
+@login_requerido
+def eliminarCategoriaProducto(request, IdCategoriaProducto):
+    if request.method != "POST":
+        messages.error(request, "Método no permitido para eliminar categorías.")
+        return redirect("admin-crud-categoria")
+
+    headers = get_headers(request)
+    res = requests.delete(f"{API_URL}{IdCategoriaProducto}/", headers=headers)
+
+    if res.status_code in (200, 204):
+        messages.success(request, "Categoría eliminada correctamente")
+    else:
+        messages.error(request, f"No se pudo eliminar: {res.text}")
+
+    usuario = request.session.get('Usuario_Username')
+    return redirect('admin-crud-categoria')

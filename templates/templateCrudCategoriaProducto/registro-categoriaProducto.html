@@ -1,46 +1,120 @@
 {% extends 'base-form.html' %}
 <!-- Extiende la plantilla base de formulario, heredando estilos y estructura general -->
 
-{% block title %}Registro de categorias{% endblock %}
+{% block title %}Registro de Categorías{% endblock %}
 <!-- Define el título de la página que aparecerá en la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Breadcrumb para mostrar la navegación jerárquica -->
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}">Panel Admin ></a>
-            <a href="{% url 'admin-crud-categoria' %}">Crud Categoria > </a>
-            <a>Formulario categoria</a>
-        {% else %}
-            <a href="{% url 'home' %}">Home ></a>
-            <a href="{% url 'crud-categoria' %}">Crud Categoria > </a>
-            <a>Formulario categoria</a>
-        {% endif %}
-    </li>
-{% endblock %}
 
 {% block header_title %}
-    <!-- Título principal de la página -->
-    <h1 class="header-title">REGISTRO DE CATEGORIAS</h1>
+<h1 class="header-title">REGISTRO DE CATEGORÍAS</h1>
 
-    <!-- Botón para volver al listado de categorías -->
-    {% if request.session.Usuario_Username == "Admin" %}
-        <a href="{% url 'admin-crud-categoria' %}">
-            <button class="button-header" type="button">Volver al Panel Admin</button>
-        </a>
-    {% else %}
-        <a href="{% url 'crud-categoria' %}">
-            <button class="button-header" type="button">Volver al Inicio</button>
-        </a>
+{% if request.session.Usuario_Username == "admin" %}
+    <a href="{% url 'admin-crud-categoria' %}">
+        <button class="button-header" type="button">Volver al Panel Admin</button>
+    </a>
+{% else %}
+    <a href="{% url 'crud-categoria' %}">
+        <button class="button-header" type="button">Volver al Inicio</button>
+    </a>
+{% endif %}
+{% endblock %}
+
+{% block extra_messages %}
+    {% if errores %}
+        <section class="messages">
+            <div class="message">
+                <h1>Corrige los errores en el formulario antes de continuar</h1>
+            </div>
+        </section>
     {% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Formulario para crear o actualizar categorías -->
-    <form method="POST" novalidate>
-        {% csrf_token %} <!-- Token de seguridad obligatorio en Django -->
-        {{ form.as_div }} <!-- Renderiza automáticamente todos los campos del formulario como divs/párrafos -->
-        <input class="form-enviar" type="submit" value="ENVIAR" onclick="return confirm('¿Seguro que deseas enviar estos datos?')">
-        <!-- Botón de envío con confirmación -->
-    </form>
+<form method="POST" novalidate>
+    {% csrf_token %}
+
+    <!-- ================================ -->
+    <!-- NOMBRE DE CATEGORÍA -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="NombreCategoria">Nombre de la Categoría:</label>
+        <div class="form-help">Ingrese el nombre de la categoría</div>
+
+        {% if errores.NombreCategoria %}
+            <div class="field-error">• {{ errores.NombreCategoria.0 }}</div>
+        {% endif %}
+
+        <input 
+            type="text" 
+            name="NombreCategoria" 
+            id="NombreCategoria" 
+            placeholder="Ej: Bebidas" 
+            class="input-text"
+            value="{{ data.NombreCategoria|default:'' }}"
+        >
+    </div>
+
+    <!-- ================================ -->
+    <!-- DESCRIPCIÓN -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="Descripcion">Descripción:</label>
+        <div class="form-help">Ingrese una descripción breve de la categoría</div>
+
+        {% if errores.Descripcion %}
+            <div class="field-error">• {{ errores.Descripcion.0 }}</div>
+        {% endif %}
+
+        <textarea 
+            name="Descripcion" 
+            id="Descripcion" 
+            placeholder="Ej: Productos líquidos y gaseosos" 
+            class="input-text"
+        >{{ data.Descripcion|default:'' }}</textarea>
+    </div>
+
+    <!-- ================================ -->
+    <!-- ESTADO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="Estado">Estado:</label>
+        <div class="form-help">Seleccione el estado de la categoría (Activo/Inactivo)</div>
+
+        {% if errores.Estado %}
+            <div class="field-error">• {{ errores.Estado.0 }}</div>
+        {% endif %}
+
+        <select name="Estado" id="Estado" class="input-text">
+            <option value="Seleccione…">Seleccione…</option>
+            <option value="Activo" {% if data.Estado == "Activo" %}selected{% endif %}>Activo</option>
+            <option value="Inactivo" {% if data.Estado == "Inactivo" %}selected{% endif %}>Inactivo</option>
+        </select>
+    </div>
+
+    <!-- ================================ -->
+    <!-- OBSERVACIONES -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="Observaciones">Observaciones:</label>
+        <div class="form-help">Ingrese cualquier comentario adicional sobre la categoría</div>
+
+        {% if errores.Observaciones %}
+            <div class="field-error">• {{ errores.Observaciones.0 }}</div>
+        {% endif %}
+
+        <textarea 
+            name="Observaciones" 
+            id="Observaciones" 
+            placeholder="Ej: Categoría con productos perecibles" 
+            class="input-text"
+        >{{ data.Observaciones|default:'' }}</textarea>
+    </div>
+
+    <input 
+        class="form-enviar" 
+        type="submit" 
+        value="ENVIAR" 
+        onclick="return confirm('¿Seguro que deseas enviar estos datos?')"
+    />
+</form>
 {% endblock %}

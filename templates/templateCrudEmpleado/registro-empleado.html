@@ -1,32 +1,104 @@
 {% extends 'base-form.html' %}
-<!-- Extiende la plantilla base para formularios que incluye estilos y scripts específicos para formularios -->
+<!-- Extiende la plantilla base para formularios que incluye estilos y estructura general -->
 
-{% block title %}Registro de empleados{% endblock %}
+{% block title %}Registro de Empleados{% endblock %}
 <!-- Título de la página que se mostrará en la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Breadcrumbs: muestran la ruta de navegación dentro del panel de administración -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel -->
-        <a href="{% url 'admin-crud-empleado' %}">Crud empleado > </a> <!-- Enlace a la sección de empleados -->
-        <a>Formulario empleado</a> <!-- Página actual sin enlace -->
-    </li>
-{% endblock %}
+
 
 {% block header_title %}
-    <!-- Título principal de la página y botón para volver al listado de empleados -->
-    <h1 class="header-title">REGISTRO DE EMPLEADOS</h1>
-    <a href="{% url 'admin-crud-empleado' %}"><button class="button-header" type="button">VOLVER</button></a>
+<h1 class="header-title">REGISTRO DE EMPLEADOS</h1>
+{% if request.session.Usuario_Username == "Admin" %}
+    <a href="{% url 'admin-crud-empleado' %}">
+        <button class="button-header" type="button">Volver al Panel Admin</button>
+    </a>
+{% else %}
+    <a href="{% url 'admin-crud-empleado' %}">
+        <button class="button-header" type="button">Volver al Inicio</button>
+    </a>
+{% endif %}
+{% endblock %}
+
+{% block extra_messages %}
+{% if errores %}
+    <section class="messages">
+        <div class="message">
+            <h1>Corrige los errores en el formulario antes de continuar</h1>
+        </div>
+    </section>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Contenido principal: formulario para registrar o actualizar empleados -->
-    <form method="POST" novalidate>
-        {% csrf_token %} <!-- Token de seguridad obligatorio en Django para prevenir CSRF -->
-        {{ form.as_div }} <!-- Renderiza automáticamente todos los campos del formulario dentro de divs -->
-        <input class="form-enviar" type="submit" value="ENVIAR"  
-               onclick="return confirm('¿Seguro que deseas enviar estos datos?')">
-        <!-- Botón para enviar el formulario con confirmación del usuario -->
-    </form>
-{% endblock %}
+<form method="POST" novalidate>
+    {% csrf_token %}
 
+    <!-- ================================ -->
+    <!-- RUT EMPLEADO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="RutEmpleado">RUT del Empleado:</label>
+        <div class="form-help">Ingrese el RUT del empleado</div>
+        {% if errores.RutEmpleado %}
+            <div class="field-error">• {{ errores.RutEmpleado.0 }}</div>
+        {% endif %}
+        <input type="text" name="RutEmpleado" id="RutEmpleado" placeholder="Ej: 12345678-9" 
+               class="input-text" value="{{ data.RutEmpleado|default:'' }}">
+    </div>
+
+    <!-- ================================ -->
+    <!-- NOMBRE EMPLEADO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="NombreEmpleado">Nombre:</label>
+        <div class="form-help">Ingrese el nombre del empleado</div>
+        {% if errores.NombreEmpleado %}
+            <div class="field-error">• {{ errores.NombreEmpleado.0 }}</div>
+        {% endif %}
+        <input type="text" name="NombreEmpleado" id="NombreEmpleado" placeholder="Ej: Juan" 
+               class="input-text" value="{{ data.NombreEmpleado|default:'' }}">
+    </div>
+
+    <!-- ================================ -->
+    <!-- APELLIDO EMPLEADO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="ApellidoEmpleado">Apellido:</label>
+        <div class="form-help">Ingrese el apellido del empleado</div>
+        {% if errores.ApellidoEmpleado %}
+            <div class="field-error">• {{ errores.ApellidoEmpleado.0 }}</div>
+        {% endif %}
+        <input type="text" name="ApellidoEmpleado" id="ApellidoEmpleado" placeholder="Ej: Pérez" 
+               class="input-text" value="{{ data.ApellidoEmpleado|default:'' }}">
+    </div>
+
+    <!-- ================================ -->
+    <!-- EDAD EMPLEADO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="EdadEmpleado">Edad:</label>
+        <div class="form-help">Ingrese la edad del empleado</div>
+        {% if errores.EdadEmpleado %}
+            <div class="field-error">• {{ errores.EdadEmpleado.0 }}</div>
+        {% endif %}
+        <input type="number" name="EdadEmpleado" id="EdadEmpleado" placeholder="Ej: 30" 
+               class="input-text" value="{{ data.EdadEmpleado|default:'' }}">
+    </div>
+
+    <!-- ================================ -->
+    <!-- TELÉFONO EMPLEADO -->
+    <!-- ================================ -->
+    <div class="form-group">
+        <label for="NumeroTelefonoEmpleado">Teléfono:</label>
+        <div class="form-help">Ingrese el número de teléfono del empleado</div>
+        {% if errores.NumeroTelefonoEmpleado %}
+            <div class="field-error">• {{ errores.NumeroTelefonoEmpleado.0 }}</div>
+        {% endif %}
+        <input type="text" name="NumeroTelefonoEmpleado" id="NumeroTelefonoEmpleado" placeholder="Ej: 912345678" 
+               class="input-text" value="{{ data.NumeroTelefonoEmpleado|default:'' }}">
+    </div>
+
+    <input class="form-enviar" type="submit" value="ENVIAR" 
+           onclick="return confirm('¿Seguro que deseas enviar estos datos?')">
+</form>
+{% endblock %}

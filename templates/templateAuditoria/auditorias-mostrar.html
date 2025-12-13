@@ -1,224 +1,183 @@
 <!DOCTYPE html>
 <html lang="es">
 {% load static %}
-<!-- Carga la etiqueta para acceder a archivos estáticos del proyecto -->
-
 <head>
     <meta charset="UTF-8">
     <title>Auditorías</title>
-
-    <!-- Archivo CSS del estilo de auditorías -->
     <link rel="stylesheet" href="{% static 'css/auditorias-style.css' %}">
 </head>
 
 <body>
 
-    <!-- ====================================================== -->
-    <!-- ENCABEZADO SUPERIOR: BOTÓN VOLVER + TÍTULO CENTRADO     -->
-    <!-- ====================================================== -->
-    <div class="header-auditoria">
+<div class="header-auditoria">
+    <a href="{% url 'adminhome' %}">
+        <button class="button-header" type="button">VOLVER</button>
+    </a>
+    <h1>Registro de Auditorías</h1>
+    <div class="placeholder"></div>
+</div>
 
-        <!-- Botón para regresar al panel de administrador -->
-        <a href="{% url 'adminhome' %}">
-            <button class="button-header" type="button">VOLVER</button>
-        </a>
+<!-- ======================= -->
+<!-- AUDITORÍA BODEGA -->
+<!-- ======================= -->
+<h2>Auditoría Bodega</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>ID Bodega</th>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th>Acción</th>
+        <th>Fecha</th>
+    </tr>
+    {% for item in AuditoriaBodega %}
+    <tr>
+        <td>{{ item.IdAuditoriaBodega }}</td>
+        <td>{{ item.BodegaIdRespaldo }}</td>
+        <td>{{ item.BodegaNombreRespaldo }}</td>
+        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Accion }}</td>
+        <td>{{ item.Fecha_hora }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Sin registros</td></tr>
+    {% endfor %}
+</table>
 
-        <!-- Título principal de la página -->
-        <h1>Registro de Auditorías</h1>
+<!-- ======================= -->
+<!-- AUDITORÍA CARGO -->
+<!-- ======================= -->
+<h2>Auditoría Cargo</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>ID Cargo</th>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th>Acción</th>
+        <th>Fecha</th>
+    </tr>
+    {% for item in AuditoriaCargo %}
+    <tr>
+        <td>{{ item.IdAuditoriaCargo }}</td>
+        <td>{{ item.CargoIdRespaldo }}</td>
+        <td>{{ item.CargoNombreRespaldo }}</td>
+        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Accion }}</td>
+        <td>{{ item.Fecha_hora }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Sin registros</td></tr>
+    {% endfor %}
+</table>
 
-        <!--
-            Div vacío usado como placeholder para mantener centrado el título
-            en el diseño flex del header.
-        -->
-        <div class="placeholder"></div>
-    </div>
+<!-- ======================= -->
+<!-- AUDITORÍA CATEGORÍA -->
+<!-- ======================= -->
+<h2>Auditoría Categoría</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>ID Categoría</th>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th>Acción</th>
+        <th>Fecha</th>
+    </tr>
+    {% for item in AuditoriaCategoria %}
+    <tr>
+        <td>{{ item.IdAuditoriaCategoria }}</td>
+        <td>{{ item.CategoriaIdRespaldo }}</td>
+        <td>{{ item.CategoriaNombreRespaldo }}</td>
+        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Accion }}</td>
+        <td>{{ item.Fecha_hora }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Sin registros</td></tr>
+    {% endfor %}
+</table>
 
-    <!-- ====================================================== -->
-    <!-- AUDITORÍA BODEGA                                        -->
-    <!-- ====================================================== -->
-    <h2>Auditoría Bodega</h2>
+<!-- ======================= -->
+<!-- AUDITORÍA EMPLEADO -->
+<!-- ======================= -->
+<h2>Auditoría Empleado</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>ID Empleado</th>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th>Acción</th>
+        <th>Fecha</th>
+    </tr>
+    {% for item in AuditoriaEmpleado %}
+    <tr>
+        <td>{{ item.IdAuditoriaEmpleado }}</td>
+        <td>{{ item.EmpleadoIdRespaldo }}</td>
+        <td>{{ item.EmpleadoNombreRespaldo }}</td>
+        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Accion }}</td>
+        <td>{{ item.Fecha_hora }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Sin registros</td></tr>
+    {% endfor %}
+</table>
 
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>ID Bodega</th>
-            <th>Nombre Bodega</th>
-            <th>Usuario ejecutó accion</th>
-            <th>Acción</th>
-            <th>Fecha</th>
-        </tr>
+<!-- ======================= -->
+<!-- AUDITORÍA PRODUCTO -->
+<!-- ======================= -->
+<h2>Auditoría Producto</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>ID Producto</th>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th>Acción</th>
+        <th>Fecha</th>
+    </tr>
+    {% for item in AuditoriaProducto %}
+    <tr>
+        <td>{{ item.IdAuditoriaProducto }}</td>
+        <td>{{ item.ProductoIdRespaldo }}</td>
+        <td>{{ item.ProductoNombreRespaldo }}</td>
+        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Accion }}</td>
+        <td>{{ item.Fecha_hora }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Sin registros</td></tr>
+    {% endfor %}
+</table>
 
-        <!-- Loop que recorre todos los registros de auditoría de bodegas -->
-        {% for item in AuditoriaBodega %}
-        <tr>
-            <td>{{ item.IdAuditoriaBodega }}</td>
-            <td>{{ item.BodegaIdRespaldo }}</td>
-            <td>{{ item.BodegaNombreRespaldo }}</td>
-            <td>{{ item.Usuario.Username }}</td>
-            <td>{{ item.Accion }}</td>
-            <td>{{ item.Fecha_hora }}</td>
-        </tr>
-
-        <!-- Si no existen registros -->
-        {% empty %}
-        <tr><td colspan="6">Sin registros</td></tr>
-        {% endfor %}
-    </table>
-
-
-    <!-- ====================================================== -->
-    <!-- AUDITORÍA CARGO                                         -->
-    <!-- ====================================================== -->
-    <h2>Auditoría Cargo</h2>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>ID Cargo</th>
-            <th>Nombre Cargo</th>
-            <th>Usuario ejecutó accion</th>
-            <th>Acción</th>
-            <th>Fecha</th>
-        </tr>
-
-        {% for item in AuditoriaCargo %}
-        <tr>
-            <td>{{ item.IdAuditoriaCargo }}</td>
-            <td>{{ item.CargoIdRespaldo }}</td>
-            <td>{{ item.CargoNombreRespaldo }}</td>
-            <td>{{ item.Usuario.Username }}</td>
-            <td>{{ item.Accion }}</td>
-            <td>{{ item.Fecha_hora }}</td>
-        </tr>
-
-        {% empty %}
-        <tr><td colspan="6">Sin registros</td></tr>
-        {% endfor %}
-    </table>
-
-
-    <!-- ====================================================== -->
-    <!-- AUDITORÍA CATEGORÍA                                     -->
-    <!-- ====================================================== -->
-    <h2>Auditoría Categoría</h2>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>ID Categoría</th>
-            <th>Nombre Categoría</th>
-            <th>Usuario ejecutó accion</th>
-            <th>Acción</th>
-            <th>Fecha</th>
-        </tr>
-
-        {% for item in AuditoriaCategoria %}
-        <tr>
-            <td>{{ item.IdAuditoriaCategoria }}</td>
-            <td>{{ item.CategoriaIdRespaldo }}</td>
-            <td>{{ item.CategoriaNombreRespaldo }}</td>
-            <td>{{ item.Usuario.Username }}</td>
-            <td>{{ item.Accion }}</td>
-            <td>{{ item.Fecha_hora }}</td>
-        </tr>
-
-        {% empty %}
-        <tr><td colspan="6">Sin registros</td></tr>
-        {% endfor %}
-    </table>
-
-
-    <!-- ====================================================== -->
-    <!-- AUDITORÍA EMPLEADO                                      -->
-    <!-- ====================================================== -->
-    <h2>Auditoría Empleado</h2>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>ID Empleado</th>
-            <th>Nombre Empleado</th>
-            <th>Usuario ejecutó accion</th>
-            <th>Acción</th>
-            <th>Fecha</th>
-        </tr>
-
-        {% for item in AuditoriaEmpleado %}
-        <tr>
-            <td>{{ item.IdAuditoriaEmpleado }}</td>
-            <td>{{ item.EmpleadoIdRespaldo }}</td>
-            <td>{{ item.EmpleadoNombreRespaldo }}</td>
-            <td>{{ item.Usuario.Username }}</td>
-            <td>{{ item.Accion }}</td>
-            <td>{{ item.Fecha_hora }}</td>
-        </tr>
-
-        {% empty %}
-        <tr><td colspan="6">Sin registros</td></tr>
-        {% endfor %}
-    </table>
-
-
-    <!-- ====================================================== -->
-    <!-- AUDITORÍA PRODUCTO                                      -->
-    <!-- ====================================================== -->
-    <h2>Auditoría Producto</h2>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>ID Producto</th>
-            <th>Nombre Producto</th>
-            <th>Usuario ejecutó accion</th>
-            <th>Acción</th>
-            <th>Fecha</th>
-        </tr>
-
-        {% for item in AuditoriaProducto %}
-        <tr>
-            <td>{{ item.IdAuditoriaProducto }}</td>
-            <td>{{ item.ProductoIdRespaldo }}</td>
-            <td>{{ item.ProductoNombreRespaldo }}</td>
-            <td>{{ item.Usuario.Username }}</td>
-            <td>{{ item.Accion }}</td>
-            <td>{{ item.Fecha_hora }}</td>
-        </tr>
-
-        {% empty %}
-        <tr><td colspan="6">Sin registros</td></tr>
-        {% endfor %}
-    </table>
-
-
-    <!-- ====================================================== -->
-    <!-- AUDITORÍA USUARIO                                       -->
-    <!-- ====================================================== -->
-    <h2>Auditoría Usuario</h2>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>ID Usuario</th>
-            <th>Nombre Usuario</th>
-            <th>Usuario ejecutó accion</th>
-            <th>Acción</th>
-            <th>Fecha</th>
-        </tr>
-
-        {% for item in AuditoriaUsuario %}
-        <tr>
-            <td>{{ item.IdAuditoriaUsuario }}</td>
-            <td>{{ item.UsuarioIdRespaldo }}</td>
-            <td>{{ item.UsuarioNombreRespaldo }}</td>
-            <td>{{ item.Usuario.Username }}</td>
-            <td>{{ item.Accion }}</td>
-            <td>{{ item.Fecha_hora }}</td>
-        </tr>
-
-        {% empty %}
-        <tr><td colspan="6">Sin registros</td></tr>
-        {% endfor %}
-    </table>
+<!-- ======================= -->
+<!-- AUDITORÍA USUARIO -->
+<!-- ======================= -->
+<h2>Auditoría Usuario</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>ID Usuario</th>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th>Acción</th>
+        <th>Fecha</th>
+    </tr>
+    {% for item in AuditoriaUsuario %}
+    <tr>
+        <td>{{ item.IdAuditoriaUsuario }}</td>
+        <td>{{ item.UsuarioIdRespaldo }}</td>
+        <td>{{ item.UsuarioNombreRespaldo }}</td>
+        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Accion }}</td>
+        <td>{{ item.Fecha_hora }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Sin registros</td></tr>
+    {% endfor %}
+</table>
 
 </body>
 </html>

@@ -1,2 +1,1 @@
-pip install PyMySQL
 pip install requests

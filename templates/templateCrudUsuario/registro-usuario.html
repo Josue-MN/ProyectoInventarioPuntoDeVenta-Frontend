@@ -1,201 +1,103 @@
 {% extends 'base-form.html' %}
-<!-- Hereda la estructura general para mantener consistencia visual -->
+{% block title %}Registro de Usuario{% endblock %}
 
-{% load static %}
-<!-- Habilita el uso de archivos estáticos como JS y CSS -->
 
-{% block title %}Registro de usuarios{% endblock %}
-<!-- Título de la pestaña del navegador -->
-
-{% block breadcrumb %}
-    <!-- Ruta de navegación actual dentro del panel administrador -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a>
-        <a href="{% url 'admin-crud-usuario' %}">Crud usuarios > </a>
-        <a>Formulario usuario</a>
-    </li>
-{% endblock %}
 
 {% block header_title %}
-    <!-- Encabezado visible del formulario -->
-    <h1 class="header-title">REGISTRO DE USUARIO</h1>
+<h1 class="header-title">REGISTRO DE USUARIO</h1>
+<a href="{% url 'admin-crud-usuario' %}">
+    <button class="button-header" type="button">Volver al Inicio</button>
+</a>
+{% endblock %}
 
-    <!-- Botón para volver al listado de usuarios -->
-    <a href="{% url 'admin-crud-usuario' %}">
-        <button class="button-header" type="button">VOLVER</button>
-    </a>
+{% block extra_messages %}
+{% if errores %}
+<section class="messages">
+    <div class="message">
+        <h1>Corrige los errores en el formulario antes de continuar</h1>
+    </div>
+</section>
+{% endif %}
 {% endblock %}
 
 {% block content %}
+<form method="POST" novalidate>
+    {% csrf_token %}
 
-    <!-- Muestra errores generales provenientes de clean() del ModelForm -->
-    {% if form.non_field_errors %}
-        <ul class="errorlist">
-            {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
+    <div class="form-group">
+        <label for="Username">Username:</label>
+        <div class="form-help">Ingrese el nombre de usuario</div>
+        {% if errores.Username %}<div class="field-error">• {{ errores.Username.0 }}</div>{% endif %}
+        <input type="text" name="Username" id="Username" placeholder="Ej: Pablo123"
+               class="input-text" value="{{ data.Username|default:'' }}">
+    </div>
+
+    <div class="form-group">
+        <label for="CorreoElectronico">Correo Electrónico:</label>
+        <div class="form-help">Ingrese un correo electrónico válido</div>
+        {% if errores.CorreoElectronico %}<div class="field-error">• {{ errores.CorreoElectronico.0 }}</div>{% endif %}
+        <input type="email" name="CorreoElectronico" id="CorreoElectronico"
+               placeholder="Ej: usuario@gmail.com" class="input-text"
+               value="{{ data.CorreoElectronico|default:'' }}">
+    </div>
+
+    <div class="form-group">
+        <label for="Empleado">Empleado:</label>
+        <div class="form-help">Seleccione el empleado asociado</div>
+        {% if errores.Empleado %}<div class="field-error">• {{ errores.Empleado.0 }}</div>{% endif %}
+        <select name="Empleado" id="Empleado" class="input-text">
+            <option value="">-- Seleccione --</option>
+            {% for emp in Empleados %}
+                <option value="{{ emp.IdEmpleado }}" {% if data.Empleado == emp.IdEmpleado %}selected{% endif %}>
+                    {{ emp.NombreEmpleado }}
+                </option>
             {% endfor %}
-        </ul>
-    {% endif %}
+        </select>
+    </div>
 
-
-    <!-- ===========================================================================
-         FORMULARIO PRINCIPAL
-         
-         IMPORTANTE:
-         Los campos se renderizan MANUALMENTE uno por uno debido a razones lógicas 
-         críticas:
-
-         1) Permite mostrar los errores de cada campo exactamente debajo del input,
-            y con el estilo personalizado .error.
-         
-         2) Permite controlar el orden de los campos y su estructura HTML sin que 
-            Django genere HTML automático no deseado (como <ul><li>).
-         
-         3) Permite mezclar lógica condicional (campo visible solo si 'actualizar'
-            es True), lo cual es IMPOSIBLE con:
-               - {{ form }}
-               - {{ form.as_p }}
-               - {{ form.as_table }}
-         
-         4) Permite integrar correctamente el Javascript (contrasenia.js) que 
-            necesita IDs específicos y contenedores propios para mostrar/ocultar 
-            la sección de contraseñas.
-         
-         5) Permite mezclar campos del ModelForm con HTML manual como el checkbox 
-            "¿Cambiar contraseña?" sin romper el layout.
-         
-         Por estas razones, se decidió renderizar cada campo manualmente.
-         =========================================================================== -->
-
-    <form method="POST" novalidate>
-        <!-- POST envía datos al servidor -->
-        <!-- novalidate desactiva validación HTML5 y usa solo validación de Django -->
-
-        {% csrf_token %}
-        <!-- Token de protección CSRF obligatorio -->
-
-
-        <!-- =============================
-             CAMPO USERNAME (manual)
-             =============================
-             Se muestra:
-             - la etiqueta,
-             - los errores,
-             - el input.
-
-             Esto NO sería posible tan personalizado con form.as_p
-        -->
-        
-
-        {% if UsuarioActual.Username != "Admin" %}
-    
-            {{ form.Username.label_tag }}
-            {% for error in form.Username.errors %}
-                <span class="error">{{ error }}</span>
+    <div class="form-group">
+        <label for="TipoDeCargo">Cargo:</label>
+        <div class="form-help">Seleccione el cargo asociado</div>
+        {% if errores.Cargo %}<div class="field-error">• {{ errores.Cargo.0 }}</div>{% endif %}
+        <select name="Cargo" id="TipoDeCargo" class="input-text">
+            <option value="">-- Seleccione --</option>
+            {% for car in Cargos %}
+                <option value="{{ car.IdCargos }}" {% if data.Cargo == car.IdCargos %}selected{% endif %}>
+                    {{ car.TipoDeCargo }}
+                </option>
             {% endfor %}
-            {{ form.Username }}
+        </select>
+    </div>
 
-        {% endif %}
-
-
-        <!-- CAMPO CORREO ELECTRÓNICO (manual) -->
-        {{ form.CorreoElectronico.label_tag }}
-        {% for error in form.CorreoElectronico.errors %}
-            <span class="error">{{ error }}</span>
-        {% endfor %}
-        {{ form.CorreoElectronico }}
-
-        
-        {% if UsuarioActual.Username != "Admin" %}
-    
-            {{ form.Empleado.label_tag }}
-            {% for error in form.Empleado.errors %}
-                <span class="error">{{ error }}</span>
+    <div class="form-group">
+        <label for="SuperUserAsociado">Super Usuario Asociado:</label>
+        <div class="form-help">Seleccione el superusuario asociado (opcional)</div>
+        {% if errores.SuperUserAsociado %}<div class="field-error">• {{ errores.SuperUserAsociado.0 }}</div>{% endif %}
+        <select name="SuperUserAsociado" id="SuperUserAsociado" class="input-text">
+            <option value="">-- Ninguno --</option>
+            {% for su in SuperUsuarios %}
+                <option value="{{ su.id }}" {% if data.SuperUserAsociado == su.id %}selected{% endif %}>
+                    {{ su.Username|default:su.username }}
+                </option>
             {% endfor %}
-            {{ form.Empleado }}
+        </select>
+    </div>
 
-            {{ form.Cargo.label_tag }}
-            {% for error in form.Cargo.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-            {{ form.Cargo }}
+    <div class="form-group">
+        <label for="Password">Contraseña:</label>
+        <div class="form-help">Ingrese la contraseña</div>
+        {% if errores.Password %}<div class="field-error">• {{ errores.Password.0 }}</div>{% endif %}
+        <input type="password" name="Password" id="Password" class="input-text">
+    </div>
 
-        {% endif %}
+    <div class="form-group">
+        <label for="ConfirmarPassword">Confirmar Contraseña:</label>
+        <div class="form-help">Repita la contraseña</div>
+        {% if errores.ConfirmarPassword %}<div class="field-error">• {{ errores.ConfirmarPassword.0 }}</div>{% endif %}
+        <input type="password" name="ConfirmarPassword" id="ConfirmarPassword" class="input-text">
+    </div>
 
-
-        {% if actualizar %}
-            <!-- ===============================================================
-                 MODO ACTUALIZACIÓN
-                 ===============================================================
-                 Aquí se muestra un CHECKBOX que solo aparece en el modo actualizar.
-
-                 Esta estructura CONDICIONAL NO podría hacerse con {{ form }} ya 
-                 que Django renderiza todos los campos juntos sin lógica personalizada.
-                 =============================================================== -->
-
-            <label>
-                <input type="checkbox" id="id_CambiarPassword" name="CambiarPassword">
-                <!-- Checkbox que activa los campos de nueva contraseña -->
-                ¿Cambiar contraseña?
-            </label>
-
-            <!-- Contenedor de los campos de contraseña que el JS mostrará/ocultará -->
-            <div id="password-fields" style="display:none;">
-
-                {{ form.Password.label_tag }}
-                {% for error in form.Password.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-                {{ form.Password }}
-
-                {{ form.ConfirmarPassword.label_tag }}
-                {% for error in form.ConfirmarPassword.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-                {{ form.ConfirmarPassword }}
-
-            </div>
-
-        {% else %}
-
-            <!-- ===========================================================
-                 MODO REGISTRO
-                 ===========================================================
-                 Aquí los campos de contraseña SIEMPRE deben mostrarse.
-                 
-                 Esta diferencia entre registro y actualización NO puede 
-                 lograrse con form.as_p ni ninguna renderización automática.
-                 =========================================================== -->
-
-            {{ form.Password.label_tag }}
-            {% for error in form.Password.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-            {{ form.Password }}
-
-            {{ form.ConfirmarPassword.label_tag }}
-            {% for error in form.ConfirmarPassword.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-            {{ form.ConfirmarPassword }}
-
-        {% endif %}
-
-
-        <!-- Botón de envío del formulario con confirmación -->
-        <input class="form-enviar"
-               type="submit"
-               value="ENVIAR"
-               onclick="return confirm('¿Seguro que deseas enviar estos datos?')">
-        <!-- confirm() evita que el usuario envíe accidentalmente el formulario -->
-
-    </form>
-    <!-- FIN DEL FORMULARIO -->
-
-
-    {% block extra_js %}
-        <!-- Archivo JS que controla mostrar/ocultar los campos de contraseña -->
-        <script src="{% static 'js/contrasenia.js' %}"></script>
-    {% endblock %}
-
+    <input class="form-enviar" type="submit" value="ENVIAR"
+           onclick="return confirm('¿Seguro que deseas enviar estos datos?')">
+</form>
 {% endblock %}

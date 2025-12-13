@@ -1,67 +1,91 @@
 {% extends 'base-crud.html' %}
-<!-- Extiende la plantilla base de CRUD que incluye estilos, scripts y estructura general -->
+<!-- Extiende la plantilla base para CRUD que incluye estilos, scripts y estructura general -->
 
 {% block title %}Lista de Empleados{% endblock %}
-<!-- Título de la página que se mostrará en la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Breadcrumbs: muestran la ruta de navegación dentro del panel de administración -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel de administración -->
-        <a>Crud empleado > </a> <!-- Página actual sin enlace -->
-    </li>
-{% endblock %}
+
+
+{% if messages %}
+<section class="messages">
+    {% for message in messages %}
+        <div class="message">
+            <h1>{{ message }}</h1>
+        </div>
+    {% endfor %}
+</section>
+{% endif %}
 
 {% block header_title %}
-    <!-- Título principal de la página y botones de navegación -->
-    <h1 class="header-title">LISTA DE EMPLEADOS</h1>
-    <!-- Botón para volver al inicio del panel de administración -->
-    <a href="{% url 'adminhome' %}"><button class="button-header" type="button">VOLVER</button></a>
-    <a href="{% url 'admin-registrar-empleado' %}"><button class="button-header" type="button">REGISTRAR EMPLEADO</button></a>
+<h1 class="header-title">LISTA DE EMPLEADOS</h1>
+
+{% if request.session.Usuario_Username == "Admin" %}
+    <a href="{% url 'adminhome' %}">
+        <button class="button-header" type="button">Volver al Panel Admin</button>
+    </a>
+    <a href="{% url 'admin-registrar-empleado' %}">
+        <button class="button-header" type="button">REGISTRAR</button>
+    </a>
+{% else %}
+    <a href="{% url 'adminhome' %}">
+        <button class="button-header" type="button">Volver al Inicio</button>
+    </a>
+    <a href="{% url 'admin-registrar-empleado' %}">
+        <button class="button-header" type="button">REGISTRAR</button>
+    </a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Contenido principal: listado de empleados -->
-    {% if Empleados %}
-        <!-- Si existen empleados, se muestra la tabla -->
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>RUT</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Recorre todos los empleados y muestra sus datos en filas -->
-                {% for emp in Empleados %}
+{% if Empleados %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>RUT</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in Empleados %}
+                {% if emp.IdEmpleado %}
                 <tr>
                     <td>{{ emp.IdEmpleado }}</td>
                     <td>{{ emp.RutEmpleado }}</td>
                     <td>{{ emp.NombreEmpleado }}</td>
                     <td>{{ emp.ApellidoEmpleado }}</td>
-
-                    <!-- Enlaces para realizar acciones sobre el empleado -->
                     <td>
-                        <!-- Botón para ver el detalle del empleado -->
-                        <a href="{% url 'admin-detalle-empleado' emp.IdEmpleado %}"><button>DETALLE</button></a>
-                        <!-- Botón para actualizar el empleado con confirmación -->
-                        <a href="{% url 'admin-actualizar-empleado' emp.IdEmpleado %}">
-                            <button onclick="return confirm('¿Seguro que deseas actualizar este empleado?')">ACTUALIZAR</button>
-                        </a>
-                        <!-- Botón para eliminar el empleado -->
-                        <a href="{% url 'admin-confirmar-eliminar-empleado' emp.IdEmpleado %}"><button>ELIMINAR</button></a>
+                        {% if request.session.Usuario_Username == "Admin" %}
+                            <a href="{% url 'admin-detalle-empleado' emp.IdEmpleado %}">
+                                <button class="button-header" type="button">DETALLE</button>
+                            </a>
+                            <a href="{% url 'admin-actualizar-empleado' emp.IdEmpleado %}">
+                                <button class="button-header" type="button">ACTUALIZAR</button>
+                            </a>
+                            <a href="{% url 'admin-confirmar-eliminar-empleado' emp.IdEmpleado %}">
+                                <button class="button-header" type="button">ELIMINAR</button>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'admin-detalle-empleado' emp.IdEmpleado %}">
+                                <button class="button-header" type="button">DETALLE</button>
+                            </a>
+                            <a href="{% url 'admin-actualizar-empleado' emp.IdEmpleado %}">
+                                <button class="button-header" type="button">ACTUALIZAR</button>
+                            </a>
+                            <a href="{% url 'admin-confirmar-eliminar-empleado' emp.IdEmpleado %}">
+                                <button class="button-header" type="button">ELIMINAR</button>
+                            </a>
+                        {% endif %}
                     </td>
                 </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <!-- Mensaje cuando no hay empleados registrados -->
-        <div class="no-registros">
-            <h1>NO HAY EMPLEADOS REGISTRADOS</h1>
-        </div>
-    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <div class="no-registros">
+        <h1>NO HAY EMPLEADOS REGISTRADOS</h1>
+    </div>
+{% endif %}
 {% endblock %}

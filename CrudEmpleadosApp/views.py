@@ -1,130 +1,148 @@
-# Importaciones necesarias
-from django.shortcuts import render, redirect  # 'render' para mostrar templates y 'redirect' para redirigir a otra URL
+import requests
+from django.shortcuts import render, redirect
 from django.contrib import messages
-from AuditoriaApp.views import RegistrarAuditoriaEmpleado
 from LoginApp.decorators import solo_admin
-# Nota general:
-# Se utiliza 'redirect' después de procesar un formulario para evitar problemas de rutas
-# y evitar que se vuelvan a enviar los datos si el usuario recarga la página.
 
-# ========================================================================
-# VISTA: Mostrar todos los empleados
-# ========================================================================
+API_URL = "http://127.0.0.1:8000/empleados/"  # Cambia según tu API
+
+# ----------------------------------------------------------
+# FUNCIÓN AUXILIAR: obtener headers con token
+# ----------------------------------------------------------
+def get_headers(request):
+    token = request.session.get("token")
+    if not token:
+        return {}
+    return {"Authorization": f"Bearer {token}"}
+
+# ----------------------------------------------------------
+# LISTAR TODOS LOS EMPLEADOS
+# ----------------------------------------------------------
 @solo_admin
 def empleadosData(request):
-    """
-    Obtiene todos los registros de empleados de la base de datos
-    y los envía al template 'empleados-models.html' para mostrarlos.
+    try:
+        headers = get_headers(request)
+        response = requests.get(API_URL, headers=headers)
 
-    Parámetros:
-    - request: Objeto HttpRequest que contiene información sobre la solicitud HTTP.
+        if response.status_code == 401:
+            messages.error(request, "No autorizado. Debes iniciar sesión nuevamente.")
+            return redirect("Login")
 
-    Retorna:
-    - render: Renderiza el template con los datos de los empleados.
-    """
-    empleados = Empleados.objects.all()  # Consulta todos los registros de la tabla Empleados
-    data = {'Empleados': empleados}  # Diccionario que se pasará al template
-    return render(request, 'templateCrudEmpleado/empleados-models.html', data)
+        empleados = response.json()
+    except Exception as e:
+        print("ERROR LISTANDO EMPLEADOS:", e)
+        empleados = []
+        messages.error(request, "No se pudo conectar con la API.")
 
+    return render(request, 'templateCrudEmpleado/empleados-models.html', {"Empleados": empleados})
 
-# ========================================================================
-# VISTA: Registro de un nuevo empleado
-# ========================================================================
+# ----------------------------------------------------------
+# REGISTRAR NUEVO EMPLEADO
+# ----------------------------------------------------------
 @solo_admin
 def empleadoRegistrationView(request):
-    """
-    Permite registrar un nuevo empleado mediante un formulario.
-    Si la solicitud es POST y el formulario es válido, guarda los datos
-    y redirige a la página de listado de empleados.
+    if request.method == "GET":
+        return render(request, 'templateCrudEmpleado/registro-empleado.html', {"data": {}, "errores": {}})
 
-    Parámetros:
-    - request: Objeto HttpRequest que contiene información sobre la solicitud HTTP.
+    data = {
+        "RutEmpleado": request.POST.get("RutEmpleado"),
+        "NombreEmpleado": request.POST.get("NombreEmpleado"),
+        "ApellidoEmpleado": request.POST.get("ApellidoEmpleado"),
+        "EdadEmpleado": request.POST.get("EdadEmpleado"),
+        "NumeroTelefonoEmpleado": request.POST.get("NumeroTelefonoEmpleado"),
+    }
 
-    Retorna:
-    - render: Renderiza el template 'registro-empleado.html' con el formulario.
-    """
-    form = forms.EmpleadoRegistrationForm()  # Inicializa un formulario vacío
+    headers = get_headers(request)
+    res = requests.post(API_URL, json=data, headers=headers)
 
-    if request.method == 'POST':  # Verifica si se envió el formulario
-        form = forms.EmpleadoRegistrationForm(request.POST)  # Crea un formulario con los datos enviados
-        if form.is_valid():  # Valida los datos del formulario
-            # Se imprimen los datos validados en consola para depuración
-            print("FORM ES VALIDO")
-            print("RUT: ", form.cleaned_data['RutEmpleado'])
-            print("NOMBRE: ", form.cleaned_data['NombreEmpleado'])
-            print("APELLIDO: ", form.cleaned_data['ApellidoEmpleado'])
-            print("EDAD: ", form.cleaned_data['EdadEmpleado'])
-            print("TELEFONO: ", form.cleaned_data['NumeroTelefonoEmpleado'])
-            
-            empleado_nuevo = form.save()  # Guarda el nuevo empleado en la base de datos
-            RegistrarAuditoriaEmpleado(request, empleado_nuevo, "REGISTRAR")
-            messages.success(request, "Empleado registrado correctamente")
-            return redirect('admin-crud-empleado')  # Redirige a la página de listado de empleados
-        else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-            
-    data = {'form': form}  # Diccionario con el formulario para enviarlo al template
-    return render(request, 'templateCrudEmpleado/registro-empleado.html', data)
+    if res.status_code == 201:
+        messages.success(request, "Empleado registrado correctamente")
+        usuario = request.session.get('Usuario_Username')
+        return redirect('admin-crud-empleado')
 
+    try:
+        errores = res.json()
+    except:
+        errores = {"general": ["Error desconocido"]}
 
-# ========================================================================
-# VISTA: Actualizar un empleado existente
-# ========================================================================
+    return render(request, 'templateCrudEmpleado/registro-empleado.html', {"data": data, "errores": errores})
+
+# ----------------------------------------------------------
+# ACTUALIZAR EMPLEADO
+# ----------------------------------------------------------
 @solo_admin
 def actualizarEmpleado(request, IdEmpleado):
-    """
-    Permite actualizar los datos de un empleado existente.
-    El campo RUT se deshabilita para que no pueda ser modificado,
-    ya que es la clave primaria.
+    headers = get_headers(request)
 
-    Parámetros:
-    - request: Objeto HttpRequest con información de la solicitud.
-    - Rut: Identificador único del empleado a actualizar.
+    if request.method == "GET":
+        res = requests.get(f"{API_URL}{IdEmpleado}/", headers=headers)
+        empleado = res.json() if res.status_code == 200 else {}
+        return render(request, 'templateCrudEmpleado/registro-empleado.html', {"data": empleado, "errores": {}})
 
-    Retorna:
-    - render: Renderiza el template 'registro-empleado.html' con el formulario.
-    """
-    empleado = Empleados.objects.get(IdEmpleado=IdEmpleado)  # Obtiene el empleado por su RUT
-    form = forms.EmpleadoRegistrationForm(instance=empleado)  # Crea un formulario precargado con los datos del empleado
+    data = {
+        "RutEmpleado": request.POST.get("RutEmpleado"),
+        "NombreEmpleado": request.POST.get("NombreEmpleado"),
+        "ApellidoEmpleado": request.POST.get("ApellidoEmpleado"),
+        "EdadEmpleado": request.POST.get("EdadEmpleado"),
+        "NumeroTelefonoEmpleado": request.POST.get("NumeroTelefonoEmpleado"),
+    }
 
-    if request.method == 'POST':  # Si se envían datos para actualizar
-        form = forms.EmpleadoRegistrationForm(request.POST, instance=empleado)  # Vincula los datos al formulario
-        if form.is_valid():  # Valida el formulario
-            empleado_actualizado = form.save()  # Guarda los cambios en la base de datos
-            RegistrarAuditoriaEmpleado(request, empleado_actualizado, "ACTUALIZAR")
-            messages.success(request, "Empleado actualizado correctamente")
-            return redirect('admin-crud-empleado')  # Redirige al listado de empleados
-        else:
-            messages.error(request, "Corrige los errores en el formulario antes de continuar")
-
-    data = {'form': form}  # Diccionario con el formulario
-    return render(request, 'templateCrudEmpleado/registro-empleado.html', data)
-
-
-# ========================================================================
-# VISTA: Eliminar un empleado
-# ========================================================================
-@solo_admin
-def confirmarEliminar(request, IdEmpleado):
-    empleado = Empleados.objects.get(IdEmpleado=IdEmpleado)
-    data = {'emp' : empleado}
-    return render(request, 'templateCrudEmpleado/confirmar-eliminar.html', data)
-
-@solo_admin
-def eliminarEmpleado(request, IdEmpleado):
-    empleado = Empleados.objects.get(IdEmpleado=IdEmpleado)  # Obtiene el empleado a eliminar
-    if request.method == 'POST':
-        RegistrarAuditoriaEmpleado(request, empleado, "ELIMINAR")
-        empleado.delete()
-        messages.success(request, f"El empleado '{empleado.NombreEmpleado}' fue eliminado correctamente.")
+    res = requests.put(f"{API_URL}{IdEmpleado}/", json=data, headers=headers)
+    if res.status_code in (200, 202):
+        messages.success(request, "Empleado actualizado correctamente")
+        usuario = request.session.get('Usuario_Username')
         return redirect('admin-crud-empleado')
-    else:
-        messages.error(request, "Método no permitido para eliminar usuarios.")
-        return redirect('admin-crud-empleado')
-    
-#Detalle
+
+    try:
+        errores = res.json()
+    except:
+        errores = {"general": ["Error desconocido"]}
+
+    return render(request, 'templateCrudEmpleado/registro-empleado.html', {"data": data, "errores": errores})
+
+# ----------------------------------------------------------
+# DETALLE DE EMPLEADO
+# ----------------------------------------------------------
 @solo_admin
 def detalleEmpleado(request, IdEmpleado):
-    empleado = Empleados.objects.get(IdEmpleado=IdEmpleado) 
-    data = {'emp' : empleado}
-    return render(request, 'templateCrudEmpleado/detalle-empleado.html', data)
+    headers = get_headers(request)
+    try:
+        res = requests.get(f"{API_URL}{IdEmpleado}/", headers=headers)
+        empleado = res.json() if res.status_code == 200 else {}
+    except Exception as e:
+        print("ERROR DETALLE EMPLEADO:", e)
+        messages.error(request, "No se pudo obtener la información desde la API.")
+        usuario = request.session.get('Usuario_Username')
+        return redirect('admin-crud-empleado' if usuario == "Admin" else 'admin-crud-empleado')
+
+    return render(request, 'templateCrudEmpleado/detalle-empleado.html', {"emp": empleado})
+
+# ----------------------------------------------------------
+# CONFIRMAR ELIMINACIÓN
+# ----------------------------------------------------------
+@solo_admin
+def confirmarEliminar(request, IdEmpleado):
+    headers = get_headers(request)
+    res = requests.get(f"{API_URL}{IdEmpleado}/", headers=headers)
+    empleado = res.json() if res.status_code == 200 else None
+    return render(request, 'templateCrudEmpleado/confirmar-eliminar.html', {"emp": empleado})
+
+# ----------------------------------------------------------
+# ELIMINAR EMPLEADO
+# ----------------------------------------------------------
+@solo_admin
+def eliminarEmpleado(request, IdEmpleado):
+    if request.method != "POST":
+        messages.error(request, "Método no permitido para eliminar empleados.")
+        usuario = request.session.get('Usuario_Username')
+        return redirect('admin-crud-empleado')
+
+    headers = get_headers(request)
+    res = requests.delete(f"{API_URL}{IdEmpleado}/", headers=headers)
+
+    if res.status_code in (200, 204):
+        messages.success(request, "Empleado eliminado correctamente")
+    else:
+        messages.error(request, f"No se pudo eliminar: {res.text}")
+
+    usuario = request.session.get('Usuario_Username')
+    return redirect('admin-crud-empleado')

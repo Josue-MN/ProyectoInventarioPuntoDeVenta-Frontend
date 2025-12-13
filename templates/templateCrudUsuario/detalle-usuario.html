@@ -4,21 +4,14 @@
 {% block title %}Detalle de Usuario{% endblock %}
 <!-- Define el título de la página que se mostrará en la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Bloque de navegación (breadcrumbs) que indica la ruta dentro del sistema -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace a la página principal del admin -->
-        <a href="{% url 'admin-crud-usuario' %}">Crud usuarios > </a> <!-- Enlace al listado de usuarios -->
-        <a>Detalle usuario</a> <!-- Página actual, sin enlace -->
-    </li>
-{% endblock %}
+
 
 {% block header_title %}
     <!-- Título principal dentro de la página -->
     <h1 class="header-title">DETALLE DEL USUARIO</h1>
     <!-- Botón para regresar al listado de usuarios -->
     <a href="{% url 'admin-crud-usuario' %}">
-        <button class="button-header" type="button">VOLVER</button>
+        <button class="button-header" type="button">Volver al Inicio</button>
     </a>
 {% endblock %}
 
@@ -45,22 +38,30 @@
 
                 {% if usu.Username == "Admin" %}
                     <td>NO APLICA</td>
-                {% else %}
-                    {% if usu.Empleado %}
-                        <td>{{ usu.Empleado }}</td>
-                    {% else %}
-                        <td>NO ASOCIADO</td>
-                    {% endif %}
-                {% endif %}
-
-                {% if usu.Username == "Admin" %}
                     <td>NO APLICA</td>
                 {% else %}
-                    {% if usu.Cargo %}
-                        <td>{{ usu.Cargo }}</td>
-                    {% else %}
-                        <td>NO ASOCIADO</td>
-                    {% endif %}
+                    <td>
+                        {% if usu.Empleado %}
+                            {% for emp in Empleados %}
+                                {% if emp.IdEmpleado == usu.Empleado %}
+                                    {{ emp.NombreEmpleado }} {{ emp.ApellidoEmpleado }}
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            NO ASOCIADO
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if usu.Cargo %}
+                            {% for car in Cargos %}
+                                {% if car.IdCargos == usu.Cargo %}
+                                    {{ car.TipoDeCargo }}
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            NO ASOCIADO
+                        {% endif %}
+                    </td>
                 {% endif %}
 
                 <td>

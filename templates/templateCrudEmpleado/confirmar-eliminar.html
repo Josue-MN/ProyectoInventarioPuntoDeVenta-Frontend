@@ -1,36 +1,32 @@
 {% extends 'base-crud.html' %}
-<!-- Extiende la plantilla base de CRUD, que incluye estilos y scripts comunes para tablas y formularios -->
+<!-- Extiende la plantilla base de CRUD, que incluye estilos, scripts y estructura general -->
 
-{% block title %}Confirmar eliminacion de empleado{% endblock %}
-<!-- Título de la página que se mostrará en la pestaña del navegador -->
+{% block title %}Confirmar Eliminación de Empleado{% endblock %}
 
-{% block breadcrumb %}
-    <!-- Breadcrumbs: indican la ruta de navegación dentro del sistema -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a> <!-- Enlace al inicio del panel -->
-        <a href="{% url 'admin-crud-empleado' %}">Crud empleado > </a> <!-- Enlace a la sección de empleados -->
-        <a>Confirmar eliminacion</a> <!-- Página actual sin enlace -->
-    </li>
-{% endblock %}
+
 
 {% block header_title %}
-    <!-- Título principal que aparece en la cabecera del contenido -->
-    <h1 class="header-title">CONFIRMACION DE ELIMINACION</h1>
+<h1 class="header-title">CONFIRMACIÓN DE ELIMINACIÓN</h1>
 {% endblock %}
 
 {% block content %}
-    <!-- Contenido principal de la página -->
-    <section>
-        <!-- Mensaje de confirmación personalizado mostrando el nombre del empleado a eliminar -->
-        <h1>¿Seguro que deseas eliminar el empleado: {{ emp.NombreEmpleado }} ?</h1>
-        
-        <!-- Botón para regresar al listado de empleados -->
-        <a href="{% url 'admin-crud-empleado' %}"><button class="button-header" type="button">VOLVER</button></a>
+<section>
+    <h1>¿Seguro que deseas eliminar el empleado: {{ emp.NombreEmpleado }}?</h1>
 
-        <!-- Formulario POST para eliminar el empleado -->
+    {% if request.session.Usuario_Username == "Admin" %}
+        <a href="{% url 'admin-crud-empleado' %}">
+            <button class="button-header" type="button">Volver al Panel Admin</button>
+        </a>
         <form method="POST" action="{% url 'admin-eliminar-empleado' emp.IdEmpleado %}">
-            {% csrf_token %} <!-- Token de seguridad de Django para proteger contra CSRF -->
-            <button type="submit">ELIMINAR</button> <!-- Botón de confirmación para eliminar -->
-        </form>
-    </section>
+    {% else %}
+        <a href="{% url 'admin-crud-empleado' %}">
+            <button class="button-header" type="button">Volver al Inicio</button>
+        </a>
+        <form method="POST" action="{% url 'admin-eliminar-empleado' emp.IdEmpleado %}">
+    {% endif %}
+
+        {% csrf_token %}
+        <button type="submit" class="button-header">ELIMINAR</button>
+    </form>
+</section>
 {% endblock %}

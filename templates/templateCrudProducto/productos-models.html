@@ -4,112 +4,95 @@
 {% block title %}Lista de Productos{% endblock %}
 <!-- Define el título de la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Breadcrumbs: indica la ruta de navegación dentro del sistema -->
-    <li>
-        {% if request.session.Usuario_Username == "Admin" %}
-            <a href="{% url 'adminhome' %}" >Panel Admin ></a>
-            <a>Crud Productos > </a>
-        {% else %}
-            <a href="{% url 'home' %}">Home ></a>
-            <a>Crud Productos > </a>
-        {% endif %}
-    </li>
-{% endblock %}
+
+
+{% if messages %}
+<section class="messages">
+    {% for message in messages %}
+        <div class="message">
+            <h1>{{ message }}</h1>
+        </div>
+    {% endfor %}
+</section>
+{% endif %}
 
 {% block header_title %}
-    <!-- Título principal de la página -->
-    <h1 class="header-title">LISTA DE PRODUCTOS</h1>
-    <!-- Botones de navegación -->
-     
-    {% if request.session.Usuario_Username == "Admin" %}
-        <a href="{% url 'adminhome' %}">
-            <button class="button-header" type="button">Volver al Panel Admin</button>
-        </a>
-        
-    {% else %}
-        <a href="{% url 'home' %}">
-            <button class="button-header" type="button">Volver al Inicio</button>
-        </a>
-    {% endif %}
+<h1 class="header-title">LISTA DE PRODUCTOS</h1>
 
-    <!-- Botón para registrar un nuevo producto -->
-    
-    {% if request.session.Usuario_Username == "Admin" %}
-        <a href="{% url 'admin-registrar-producto' %}">
-            <button class="button-header" type="button">REGISTRAR</button>
-        </a>
-    {% else %}
-        <a href="{% url 'registrar-producto' %}">
-            <button class="button-header" type="button">REGISTRAR</button>
-        </a>
-    {% endif %}
-    
+{% if request.session.Usuario_Username == "admin" %}
+    <a href="{% url 'adminhome' %}">
+        <button class="button-header" type="button">Volver al Panel Admin</button>
+    </a>
+    <a href="{% url 'admin-registrar-producto' %}">
+        <button class="button-header" type="button">REGISTRAR</button>
+    </a>
+{% else %}
+    <a href="{% url 'home' %}">
+        <button class="button-header" type="button">Volver al Inicio</button>
+    </a>
+    <a href="{% url 'registrar-producto' %}">
+        <button class="button-header" type="button">REGISTRAR</button>
+    </a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-    <!-- Bloque de contenido principal: lista de productos -->
-    {% if Productos %}
-        <!-- Si existen productos, se muestra la tabla -->
-        <table>
-            <thead>
-                <tr>
-                    <th>ID PRODUCTO</th>
-                    <th>Código de barras</th>
-                    <th>Valor</th>
-                    <th>Stock</th>
-                    <th>Nombre del producto</th>
-                    <th>Fecha de registro</th>
-                    <th>Marca</th>
-                    <th>Fecha de vencimiento</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Recorre todos los productos y crea una fila por cada uno -->
-                {% for pro in Productos %}
-                <tr>
-                    <td>{{ pro.IdProducto }}</td>
-                    <td>{{ pro.CodigoDeBarras }}</td>
-                    <td>{{ pro.ValorProducto }}</td>
-                    <td>{{ pro.StockProducto }}</td>
-                    <td>{{ pro.NombreProducto }}</td>
-                    <td>{{ pro.FechaDeRegistroProducto }}</td>
-                    <td>{{ pro.MarcaProducto }}</td>
-                    <td>{{ pro.FechaDeVencimiento }}</td>
-                    
-                    <!-- Botones de acción: Detalle, Actualizar y Eliminar -->
-                    <td>
-                        {% if request.session.Usuario_Username == "Admin" %}
-                            <a href="{% url 'admin-detalle-producto' pro.IdProducto %}">
-                                <button class="button-header" type="button">DETALLE</button>
-                            </a>
-                            <a href="{% url 'admin-actualizar-producto' pro.IdProducto %}">
-                                <button class="button-header" type="button">ACTUALIZAR</button>
-                            </a>
-                            <a href="{% url 'admin-confirmar-eliminar-producto' pro.IdProducto %}">
-                                <button class="button-header" type="button">ELIMINAR</button>
-                            </a>
-                        {% else %}
-                            <a href="{% url 'detalle-producto' pro.IdProducto %}">
-                                <button class="button-header" type="button">DETALLE</button>
-                            </a>
-                            <a href="{% url 'actualizar-producto' pro.IdProducto %}">
-                                <button class="button-header" type="button">ACTUALIZAR</button>
-                            </a>
-                            <a href="{% url 'confirmar-eliminar-producto' pro.IdProducto %}">
-                                <button class="button-header" type="button">ELIMINAR</button>
-                            </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <!-- Si no hay productos registrados, muestra mensaje informativo -->
-        <div class="no-registros">
-            <h1>NO HAY PRODUCTOS REGISTRADOS</h1>
-        </div>
-    {% endif %}
+{% if Productos %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID PRODUCTO</th>
+                <th>Código de barras</th>
+                <th>Valor</th>
+                <th>Stock</th>
+                <th>Nombre</th>
+                <th>Fecha de registro</th>
+                <th>Marca</th>
+                <th>Fecha de vencimiento</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pro in Productos %}
+            <tr>
+                <td>{{ pro.IdProducto }}</td>
+                <td>{{ pro.CodigoDeBarras }}</td>
+                <td>{{ pro.ValorProducto }}</td>
+                <td>{{ pro.StockProducto }}</td>
+                <td>{{ pro.NombreProducto }}</td>
+                <td>{{ pro.FechaDeRegistroProducto }}</td>
+                <td>{{ pro.MarcaProducto }}</td>
+                <td>{{ pro.FechaDeVencimiento }}</td>
+                <td>
+                    {% if request.session.Usuario_Username == "admin" %}
+                        <a href="{% url 'admin-detalle-producto' pro.IdProducto %}">
+                            <button class="button-header" type="button">DETALLE</button>
+                        </a>
+                        <a href="{% url 'admin-actualizar-producto' pro.IdProducto %}">
+                            <button class="button-header" type="button">ACTUALIZAR</button>
+                        </a>
+                        <a href="{% url 'admin-confirmar-eliminar-producto' pro.IdProducto %}">
+                            <button class="button-header" type="button">ELIMINAR</button>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'detalle-producto' pro.IdProducto %}">
+                            <button class="button-header" type="button">DETALLE</button>
+                        </a>
+                        <a href="{% url 'actualizar-producto' pro.IdProducto %}">
+                            <button class="button-header" type="button">ACTUALIZAR</button>
+                        </a>
+                        <a href="{% url 'confirmar-eliminar-producto' pro.IdProducto %}">
+                            <button class="button-header" type="button">ELIMINAR</button>
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <div class="no-registros">
+        <h1>NO HAY PRODUCTOS REGISTRADOS</h1>
+    </div>
+{% endif %}
 {% endblock %}

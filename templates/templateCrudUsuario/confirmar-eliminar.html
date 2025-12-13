@@ -4,14 +4,7 @@
 {% block title %}Confirmar eliminacion de usuario{% endblock %}
 <!-- Define el título de la página que se mostrará en la pestaña del navegador -->
 
-{% block breadcrumb %}
-    <!-- Bloque de navegación (breadcrumbs) que indica la ruta dentro del sistema -->
-    <li>
-        <a href="{% url 'adminhome' %}">Admin home > </a>
-        <a href="{% url 'admin-crud-usuario' %}">Crud usuarios > </a>
-        <a>Confirmar eliminacion</a> <!-- Página actual, sin enlace -->
-    </li>
-{% endblock %}
+
 
 {% block header_title %}
     <!-- Título principal que aparece dentro de la página -->
@@ -22,17 +15,17 @@
     <!-- Bloque principal de contenido dinámico -->
     <section>
         <!-- Mensaje de confirmación, mostrando el nombre de usuario que se eliminará -->
-        <h1>¿Seguro que deseas eliminar el usuario: {{ usu.Username}} ?</h1>
+        <h1>¿Seguro que deseas eliminar el usuario: {{ usu.Username }} ?</h1>
         
         <!-- Botón para regresar al listado de usuarios sin eliminar -->
         <a href="{% url 'admin-crud-usuario' %}">
-            <button class="button-header" type="button">VOLVER</button>
+            <button class="button-header" type="button">Volver al Inicio</button>
         </a>
 
         <!-- Formulario para eliminar el usuario -->
         <form method="POST" action="{% url 'admin-eliminar-usuario' usu.IdUsuarios %}">
             {% csrf_token %} <!-- Token de seguridad para prevenir ataques CSRF -->
-            <button type="submit">ELIMINAR</button> <!-- Botón de confirmación -->
+            <button type="submit" class="button-header">ELIMINAR</button> <!-- Botón de confirmación -->
         </form>
     </section>
 {% endblock %}
