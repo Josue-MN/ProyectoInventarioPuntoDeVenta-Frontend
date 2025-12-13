@@ -6,7 +6,7 @@
 
 {% block header_title %}
     <h1 class="header-title">DETALLE DE CARGO</h1>
-    {% if request.session.Usuario_Username == "Admin" %}
+    {% if request.COOKIES.username|default:"" == "admin" %}
         <a href="{% url 'admin-crud-cargo' %}"><button class="button-header" type="button">VOLVER</button></a>
     {% else %}
         <a href="{% url 'admin-crud-cargo' %}"><button class="button-header" type="button">VOLVER</button></a>
@@ -33,7 +33,7 @@
                 <td>{{ cag.DescripcionDelCargo }}</td>
                 <td>{{ cag.SueldoBase }}</td>
                 <td>
-                    {% if request.session.Usuario_Username == "Admin" %}
+                    {% if request.COOKIES.username|default:"" == "admin" %}
                         <a href="{% url 'admin-actualizar-cargo' cag.IdCargos %}">
                             <button onclick="return confirm('¿Seguro que deseas actualizar este cargo?')">ACTUALIZAR</button>
                         </a>

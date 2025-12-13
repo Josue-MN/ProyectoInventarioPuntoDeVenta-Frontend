@@ -12,8 +12,13 @@ API_AUDITORIA_USUARIO = "http://127.0.0.1:8000/auditoriaUsuario/"
 
 
 def get_headers(request):
-    token = request.session.get("token")
-    return {"Authorization": f"Bearer {token}"} if token else {}
+    token = request.COOKIES.get("token")
+    if not token:
+        return {}
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
 
 @solo_admin

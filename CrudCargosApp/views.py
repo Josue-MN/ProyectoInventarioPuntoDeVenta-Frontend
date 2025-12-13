@@ -1,39 +1,40 @@
 import requests
 from django.shortcuts import render, redirect
-from django.contrib import messages
 from LoginApp.decorators import solo_admin
 
 API_URL = "http://127.0.0.1:8000/cargos/"  # Cambia según tu API
 
 
 # ----------------------------------------------------------
-# FUNCIÓN PARA OBTENER HEADERS CON TOKEN
+# HEADERS JWT
 # ----------------------------------------------------------
 def get_headers(request):
-    token = request.session.get("token")
+    token = request.COOKIES.get("token")
     if not token:
-        return {}
-    return {"Authorization": f"Bearer {token}"}
+        return None
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
 
 
 # ----------------------------------------------------------
-# LISTAR TODOS LOS CARGOS
+# LISTAR CARGOS
 # ----------------------------------------------------------
 @solo_admin
 def cargosData(request):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        headers = get_headers(request)
-        response = requests.get(API_URL, headers=headers)
-
-        if response.status_code == 401:
-            messages.error(request, "No autorizado. Debes iniciar sesión nuevamente.")
+        res = requests.get(API_URL, headers=headers)
+        if res.status_code == 401:
             return redirect("Login")
-
-        cargos = response.json()
+        cargos = res.json()
     except Exception as e:
         print("ERROR LISTANDO CARGOS:", e)
         cargos = []
-        messages.error(request, "No se pudo conectar con la API.")
 
     return render(request, 'templateCrudCargo/cargos-models.html', {"Cargos": cargos})
 
@@ -43,12 +44,13 @@ def cargosData(request):
 # ----------------------------------------------------------
 @solo_admin
 def cargosRegistracionView(request):
-
-    # GET → Mostrar formulario vacío
     if request.method == "GET":
         return render(request, 'templateCrudCargo/registro-cargo.html', {"data": {}, "errores": {}})
 
-    # POST → Enviar datos a la API
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     data = {
         "TipoDeCargo": request.POST.get("TipoDeCargo"),
         "EstadoDelCargo": request.POST.get("EstadoDelCargo"),
@@ -56,41 +58,33 @@ def cargosRegistracionView(request):
         "SueldoBase": request.POST.get("SueldoBase"),
     }
 
-    headers = get_headers(request)
-    res = requests.post(API_URL, json=data, headers=headers)
-
-    if res.status_code == 201:
-        messages.success(request, "Cargo registrado correctamente")
-        return redirect("admin-crud-cargo")
-
-    # Manejo de errores
     try:
+        res = requests.post(API_URL, json=data, headers=headers)
+        if res.status_code == 201:
+            return redirect("admin-crud-cargo")
         errores = res.json()
-    except:
-        errores = {"general": ["Error desconocido"]}
+    except Exception as e:
+        print("ERROR REGISTRANDO CARGO:", e)
+        errores = {"general": ["No se pudo conectar con la API"]}
 
     return render(request, 'templateCrudCargo/registro-cargo.html', {"data": data, "errores": errores})
 
 
 # ----------------------------------------------------------
-# ACTUALIZAR CARGO EXISTENTE
+# ACTUALIZAR CARGO
 # ----------------------------------------------------------
 @solo_admin
 def actualizarCargo(request, IdCargos):
     headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
 
-    # GET → Obtener datos actuales
     if request.method == "GET":
-        response = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
-        if response.status_code == 200:
-            cargo = response.json()
-        else:
-            messages.error(request, "No se pudo obtener el cargo desde la API.")
+        res = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
+        if res.status_code != 200:
             return redirect("admin-crud-cargo")
+        return render(request, 'templateCrudCargo/registro-cargo.html', {"data": res.json(), "errores": {}})
 
-        return render(request, 'templateCrudCargo/registro-cargo.html', {"data": cargo, "errores": {}})
-
-    # POST → Enviar datos actualizados
     data = {
         "TipoDeCargo": request.POST.get("TipoDeCargo"),
         "EstadoDelCargo": request.POST.get("EstadoDelCargo"),
@@ -98,17 +92,14 @@ def actualizarCargo(request, IdCargos):
         "SueldoBase": request.POST.get("SueldoBase"),
     }
 
-    res = requests.put(f"{API_URL}{IdCargos}/", json=data, headers=headers)
-
-    if res.status_code in (200, 202):
-        messages.success(request, "Cargo actualizado correctamente")
-        return redirect("admin-crud-cargo")
-
-    # Manejo de errores
     try:
+        res = requests.put(f"{API_URL}{IdCargos}/", json=data, headers=headers)
+        if res.status_code in (200, 202):
+            return redirect("admin-crud-cargo")
         errores = res.json()
-    except:
-        errores = {"general": ["Error desconocido"]}
+    except Exception as e:
+        print("ERROR ACTUALIZANDO CARGO:", e)
+        errores = {"general": ["No se pudo conectar con la API"]}
 
     return render(request, 'templateCrudCargo/registro-cargo.html', {"data": data, "errores": errores})
 
@@ -119,15 +110,16 @@ def actualizarCargo(request, IdCargos):
 @solo_admin
 def detalleCargo(request, IdCargos):
     headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        response = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
-        if response.status_code == 404:
-            messages.error(request, "El cargo no existe.")
+        res = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
+        if res.status_code != 200:
             return redirect("admin-crud-cargo")
-        cargo = response.json()
+        cargo = res.json()
     except Exception as e:
         print("ERROR DETALLE CARGO:", e)
-        messages.error(request, "No se pudo obtener la información desde la API.")
         return redirect("admin-crud-cargo")
 
     return render(request, 'templateCrudCargo/detalle-cargo.html', {"cag": cargo})
@@ -139,12 +131,11 @@ def detalleCargo(request, IdCargos):
 @solo_admin
 def confirmarEliminar(request, IdCargos):
     headers = get_headers(request)
-    response = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
+    if not headers:
+        return redirect("Login")
 
-    if response.status_code == 200:
-        cargo = response.json()
-    else:
-        cargo = None
+    res = requests.get(f"{API_URL}{IdCargos}/", headers=headers)
+    cargo = res.json() if res.status_code == 200 else None
 
     return render(request, 'templateCrudCargo/confirmar-eliminar.html', {"cag": cargo})
 
@@ -155,19 +146,11 @@ def confirmarEliminar(request, IdCargos):
 @solo_admin
 def eliminarCargo(request, IdCargos):
     if request.method != "POST":
-        messages.error(request, "Método no permitido para eliminar cargos.")
         return redirect("admin-crud-cargo")
 
     headers = get_headers(request)
-    res = requests.delete(f"{API_URL}{IdCargos}/", headers=headers)
+    if not headers:
+        return redirect("Login")
 
-    if res.status_code in (200, 204):
-        messages.success(request, "Cargo eliminado correctamente")
-        try:
-            cargo = res.json()
-        except:
-            pass
-    else:
-        messages.error(request, f"No se pudo eliminar: {res.text}")
-
+    requests.delete(f"{API_URL}{IdCargos}/", headers=headers)
     return redirect("admin-crud-cargo")

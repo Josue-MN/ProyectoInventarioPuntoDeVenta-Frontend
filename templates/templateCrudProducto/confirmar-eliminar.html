@@ -13,7 +13,7 @@
 <section>
     <h1>¿Seguro que deseas eliminar el producto: {{ pro.NombreProducto }}?</h1>
 
-    {% if request.session.Usuario_Username == "admin" %}
+    {% if request.COOKIES.username|default:"" == "admin" %}
         <a href="{% url 'admin-crud-producto' %}">
             <button class="button-header" type="button">Volver al Panel Admin</button>
         </a>

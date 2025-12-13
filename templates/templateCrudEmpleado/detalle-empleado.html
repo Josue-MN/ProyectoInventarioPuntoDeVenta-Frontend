@@ -6,7 +6,7 @@
 
 {% block header_title %}
 <h1 class="header-title">DETALLE DE EMPLEADO</h1>
-{% if request.session.Usuario_Username == "Admin" %}
+{% if request.COOKIES.username|default:"" == "admin" %}
     <a href="{% url 'admin-crud-empleado' %}">
         <button class="button-header" type="button">Volver al Panel Admin</button>
     </a>
@@ -39,7 +39,7 @@
             <td>{{ emp.EdadEmpleado }}</td>
             <td>{{ emp.NumeroTelefonoEmpleado }}</td>
             <td>
-                {% if request.session.Usuario_Username == "Admin" %}
+                {% if request.COOKIES.username|default:"" == "admin" %}
                     <a href="{% url 'admin-actualizar-empleado' emp.IdEmpleado %}">
                         <button class="button-header" type="button">ACTUALIZAR</button>
                     </a>

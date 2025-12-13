@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django.urls import path, include
 from AdminHomeApp.views import renderAdminHome  # Importa la view que renderiza el home del administrador
 from CrudEmpleadosApp import views  # Importa views de la app CrudEmpleadosApp

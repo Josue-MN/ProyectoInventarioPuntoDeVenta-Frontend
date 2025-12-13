@@ -8,7 +8,7 @@
 
 {% block header_title %}
 <h1 class="header-title">DETALLES DEL PRODUCTO</h1>
-{% if request.session.Usuario_Username == "admin" %}
+{% if request.COOKIES.username|default:"" == "admin" %}
     <a href="{% url 'admin-crud-producto' %}">
         <button class="button-header" type="button">Volver al Panel Admin</button>
     </a>
@@ -72,7 +72,7 @@
             </td>
             
             <td>
-                {% if request.session.Usuario_Username == "admin" %}
+                {% if request.COOKIES.username|default:"" == "admin" %}
                     <a href="{% url 'admin-actualizar-producto' pro.IdProducto %}">
                         <button class="button-header" type="button">ACTUALIZAR</button>
                     </a>

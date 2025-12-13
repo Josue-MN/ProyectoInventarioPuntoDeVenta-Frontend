@@ -1,6 +1,5 @@
 import requests
 from django.shortcuts import render, redirect
-from django.contrib import messages
 from LoginApp.decorators import solo_admin
 
 # ----------------------------
@@ -15,20 +14,29 @@ API_URL_AUTHUSER = "http://127.0.0.1:8000/authuser/"
 # Función auxiliar headers
 # ----------------------------
 def get_headers(request):
-    token = request.session.get("token")
-    return {"Authorization": f"Bearer {token}"} if token else {}
+    token = request.COOKIES.get("token")
+    if not token:
+        return None
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
 # ----------------------------
 # LISTAR USUARIOS
 # ----------------------------
 @solo_admin
 def usuariosData(request):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        res = requests.get(API_URL_USUARIOS, headers=get_headers(request))
+        res = requests.get(API_URL_USUARIOS, headers=headers)
         usuarios = res.json() if res.status_code == 200 else []
     except:
         usuarios = []
-        messages.error(request, "No se pudo conectar con la API.")
+
     return render(request, 'templateCrudUsuario/usuarios-models.html', {"Usuarios": usuarios})
 
 # ----------------------------
@@ -36,19 +44,16 @@ def usuariosData(request):
 # ----------------------------
 @solo_admin
 def usuariosRegistrationView(request):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        Empleados = requests.get(API_URL_EMPLEADOS, headers=get_headers(request)).json()
-        Cargos = requests.get(API_URL_CARGOS, headers=get_headers(request)).json()
-        SuperUsuarios = requests.get(API_URL_AUTHUSER, headers=get_headers(request)).json()
-        
-        print("=== DEBUG EMPLEADOS ===")
-        print(Empleados[0] if Empleados else "vacío")
-        print("\n=== DEBUG CARGOS ===")
-        print(Cargos[0] if Cargos else "vacío")
-    except Exception as e:
-        print(f"Error: {e}")
+        Empleados = requests.get(API_URL_EMPLEADOS, headers=headers).json()
+        Cargos = requests.get(API_URL_CARGOS, headers=headers).json()
+        SuperUsuarios = requests.get(API_URL_AUTHUSER, headers=headers).json()
+    except:
         Empleados, Cargos, SuperUsuarios = [], [], []
-        messages.error(request, "No se pudieron cargar empleados, cargos o usuarios.")
 
     data, errores = {}, {}
 
@@ -60,20 +65,11 @@ def usuariosRegistrationView(request):
             "CorreoElectronico": request.POST.get("CorreoElectronico", "").strip(),
         }
 
-        try:
-            data["Empleado"] = int(request.POST.get("Empleado"))
-        except (ValueError, TypeError):
-            data["Empleado"] = None
-
-        try:
-            data["Cargo"] = int(request.POST.get("Cargo"))
-        except (ValueError, TypeError):
-            data["Cargo"] = None
-
-        try:
-            data["SuperUserAsociado"] = int(request.POST.get("SuperUserAsociado")) if request.POST.get("SuperUserAsociado") else None
-        except (ValueError, TypeError):
-            data["SuperUserAsociado"] = None
+        for campo in ["Empleado", "Cargo", "SuperUserAsociado"]:
+            try:
+                data[campo] = int(request.POST.get(campo)) if request.POST.get(campo) else None
+            except (ValueError, TypeError):
+                data[campo] = None
 
         for campo in ["Username", "Password", "ConfirmarPassword", "CorreoElectronico", "Empleado", "Cargo"]:
             if not data.get(campo):
@@ -92,17 +88,11 @@ def usuariosRegistrationView(request):
                     "Cargo": data["Cargo"],
                     "UserAuth": data["SuperUserAsociado"],
                 }
-                print("=== PAYLOAD ENVIADO ===")
-                print(payload)
-                res = requests.post(API_URL_USUARIOS, json=payload, headers=get_headers(request))
-                print(f"=== STATUS CODE: {res.status_code} ===")
-                print(f"=== RESPONSE: {res.text} ===")
+                res = requests.post(API_URL_USUARIOS, json=payload, headers=headers)
                 if res.status_code == 201:
-                    messages.success(request, "Usuario registrado correctamente")
                     return redirect('admin-crud-usuario')
                 errores.update(res.json())
-            except Exception as e:
-                print(f"=== EXCEPTION: {e} ===")
+            except:
                 errores["general"] = ["Error al conectar con la API"]
 
     return render(request, 'templateCrudUsuario/registro-usuario.html',
@@ -113,116 +103,54 @@ def usuariosRegistrationView(request):
 # ----------------------------
 @solo_admin
 def actualizarUsuario(request, IdUsuarios):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     errores = {}
     data = {}
 
-    # ----------------------------
-    # CARGAR DATOS (GET)
-    # ----------------------------
     if request.method == "GET":
         try:
-            res = requests.get(
-                f"{API_URL_USUARIOS}{IdUsuarios}/",
-                headers=get_headers(request)
-            )
-
-            if res.status_code != 200:
-                messages.error(request, "No se pudo cargar el usuario.")
-                return redirect("admin-crud-usuario")
-
-            usuario = res.json()
-
+            res = requests.get(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=headers)
+            usuario = res.json() if res.status_code == 200 else {}
             data = {
                 "Username": usuario.get("Username"),
                 "CorreoElectronico": usuario.get("CorreoElectronico"),
             }
+        except:
+            data = {}
+        return render(request, "templateCrudUsuario/actualizar-usuario.html",
+                      {"data": data, "errores": errores})
 
-        except Exception as e:
-            print(e)
-            messages.error(request, "Error al conectar con la API.")
-            return redirect("admin-crud-usuario")
-
-        return render(
-            request,
-            "templateCrudUsuario/actualizar-usuario.html",
-            {"data": data, "errores": errores}
-        )
-
-    # ----------------------------
-    # PROCESAR EDICIÓN (POST)
-    # ----------------------------
+    # POST → procesar edición
     data["Username"] = request.POST.get("Username", "")
     correo = request.POST.get("CorreoElectronico", "").strip()
     password = request.POST.get("Password", "").strip()
     confirmar = request.POST.get("ConfirmarPassword", "").strip()
-
-    # ----------------------------
-    # VALIDACIONES
-    # ----------------------------
-    if not correo:
-        errores["CorreoElectronico"] = ["El correo es obligatorio"]
 
     if password or confirmar:
         if password != confirmar:
             errores["ConfirmarPassword"] = ["Las contraseñas no coinciden"]
 
     if errores:
-        return render(
-            request,
-            "templateCrudUsuario/actualizar-usuario.html",
-            {
-                "data": {
-                    "Username": data["Username"],
-                    "CorreoElectronico": correo
-                },
-                "errores": errores
-            }
-        )
+        return render(request, "templateCrudUsuario/actualizar-usuario.html",
+                      {"data": {"Username": data["Username"], "CorreoElectronico": correo}, "errores": errores})
 
-    # ----------------------------
-    # PAYLOAD (solo editable)
-    # ----------------------------
-    payload = {
-        "CorreoElectronico": correo
-    }
-
+    payload = {"CorreoElectronico": correo}
     if password:
         payload["Password"] = password
 
     try:
-        print("=== PAYLOAD EDICIÓN ===")
-        print(payload)
-
-        res = requests.patch(
-            f"{API_URL_USUARIOS}{IdUsuarios}/",
-            json=payload,
-            headers=get_headers(request)
-        )
-
-        print(f"STATUS: {res.status_code}")
-        print(f"RESPONSE: {res.text}")
-
+        res = requests.patch(f"{API_URL_USUARIOS}{IdUsuarios}/", json=payload, headers=headers)
         if res.status_code in (200, 202):
-            messages.success(request, "Usuario actualizado correctamente")
             return redirect("admin-crud-usuario")
-
         errores.update(res.json())
-
-    except Exception as e:
-        print(e)
+    except:
         errores["general"] = ["Error al conectar con la API"]
 
-    return render(
-        request,
-        "templateCrudUsuario/actualizar-usuario.html",
-        {
-            "data": {
-                "Username": data["Username"],
-                "CorreoElectronico": correo
-            },
-            "errores": errores
-        }
-    )
+    return render(request, "templateCrudUsuario/actualizar-usuario.html",
+                  {"data": {"Username": data["Username"], "CorreoElectronico": correo}, "errores": errores})
 
 # ----------------------------
 # DETALLE USUARIO
@@ -230,8 +158,8 @@ def actualizarUsuario(request, IdUsuarios):
 @solo_admin
 def detalleUsuario(request, IdUsuarios):
     headers = get_headers(request)
-    usuario = {}
-    Empleados, Cargos, SuperUsuarios = [], [], []
+    if not headers:
+        return redirect("Login")
 
     try:
         res_usu = requests.get(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=headers)
@@ -246,9 +174,9 @@ def detalleUsuario(request, IdUsuarios):
         res_su = requests.get(API_URL_AUTHUSER, headers=headers)
         SuperUsuarios = res_su.json() if res_su.status_code == 200 else []
     except:
-        messages.error(request, "No se pudo obtener la información desde la API.")
+        usuario, Empleados, Cargos, SuperUsuarios = {}, [], [], []
 
-    return render(request, 'templateCrudUsuario/detalle-usuario.html', 
+    return render(request, 'templateCrudUsuario/detalle-usuario.html',
                   {"usu": usuario, "Empleados": Empleados, "Cargos": Cargos, "SuperUsuarios": SuperUsuarios})
 
 # ----------------------------
@@ -256,8 +184,12 @@ def detalleUsuario(request, IdUsuarios):
 # ----------------------------
 @solo_admin
 def confirmarEliminar(request, IdUsuarios):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        res = requests.get(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=get_headers(request))
+        res = requests.get(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=headers)
         usuario = res.json() if res.status_code == 200 else None
     except:
         usuario = None
@@ -269,16 +201,15 @@ def confirmarEliminar(request, IdUsuarios):
 @solo_admin
 def eliminarUsuario(request, IdUsuarios):
     if request.method != "POST":
-        messages.error(request, "Método no permitido para eliminar usuarios.")
         return redirect('admin-crud-usuario')
 
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        res = requests.delete(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=get_headers(request))
-        if res.status_code in (200, 204):
-            messages.success(request, "Usuario eliminado correctamente")
-        else:
-            messages.error(request, f"No se pudo eliminar: {res.text}")
+        requests.delete(f"{API_URL_USUARIOS}{IdUsuarios}/", headers=headers)
     except:
-        messages.error(request, "Error al conectar con la API")
+        pass
 
     return redirect('admin-crud-usuario')

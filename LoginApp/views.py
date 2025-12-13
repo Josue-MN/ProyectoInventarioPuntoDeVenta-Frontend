@@ -1,12 +1,14 @@
 import requests
 from django.shortcuts import render, redirect
-from django.contrib import messages
+
+import requests
+from django.shortcuts import render, redirect
 
 API_LOGIN_URL = "http://127.0.0.1:8000/api/token/"
 
 
 def renderlogin(request):
-    return render(request, 'templateLogin/login.html')
+    return render(request, "templateLogin/login.html")
 
 
 def renderLoginForm(request):
@@ -14,42 +16,67 @@ def renderLoginForm(request):
         username = request.POST.get("UsernameField")
         password = request.POST.get("PasswordField")
 
-        # Datos a enviar a la API
+        if not username or not password:
+            return render(
+                request,
+                "templateLogin/login-form.html",
+                {"error": "Debe ingresar usuario y contraseña."}
+            )
+
         data = {
             "username": username,
             "password": password
         }
 
-        # Enviar request al backend (API)
-        response = requests.post(API_LOGIN_URL, data=data)
+        try:
+            response = requests.post(API_LOGIN_URL, data=data, timeout=5)
+        except requests.RequestException:
+            return render(
+                request,
+                "templateLogin/login-form.html",
+                {"error": "No se pudo conectar con el servidor de autenticación."}
+            )
 
-        # Si la API dice que las credenciales son correctas
         if response.status_code == 200:
-            json_data = response.json()
-            access_token = json_data.get("access")
+            access_token = response.json().get("access")
 
             if not access_token:
-                messages.error(request, "La API no devolvió un token de acceso.")
-                return render(request, "templateLogin/login-form.html")
+                return render(
+                    request,
+                    "templateLogin/login-form.html",
+                    {"error": "La API no devolvió un token válido."}
+                )
 
-            # Guardar token en sesión
-            request.session["token"] = access_token
-            request.session["Usuario_Username"] = username
+            redirect_response = redirect(
+                "adminhome" if username.lower() == "admin" else "home"
+            )
 
-            # Behavior personalizado
-            if username.lower() == "admin":
-                return redirect("adminhome")
-            else:
-                return redirect("home")
+            redirect_response.set_cookie(
+                "token",
+                access_token,
+                httponly=True,
+                samesite="Lax"
+            )
 
-        # Si la API responde error de credenciales
-        messages.error(request, "Usuario o contraseña incorrectos.")
-        return render(request, "templateLogin/login-form.html")
+            redirect_response.set_cookie(
+                "username",
+                username,
+                samesite="Lax"
+            )
 
-    # Si entra por GET, mostrar formulario normal
+            return redirect_response
+
+        return render(
+            request,
+            "templateLogin/login-form.html",
+            {"error": "Usuario o contraseña incorrectos."}
+        )
+
     return render(request, "templateLogin/login-form.html")
 
 
 def renderLogout(request):
-    request.session.flush()
-    return redirect('Login')
+    response = redirect("Login")
+    response.delete_cookie("token")
+    response.delete_cookie("username")
+    return response

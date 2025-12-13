@@ -1,46 +1,47 @@
 import requests
 from django.shortcuts import render, redirect
-from django.contrib import messages
 from LoginApp.decorators import login_requerido
 
 API_URL = "http://127.0.0.1:8000/bodegas/"
 
+
 # ----------------------------------------------------------
-# FUNCIÓN PARA OBTENER HEADERS CON TOKEN
+# HEADERS JWT
 # ----------------------------------------------------------
 def get_headers(request):
-    token = request.session.get("token")
-
-    # Si no hay token, no pedirá nada a la API
+    token = request.COOKIES.get("token")
     if not token:
-        return {}
-
+        return None
     return {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
     }
 
 
 # ----------------------------------------------------------
-# LISTAR TODAS LAS BODEGAS
+# LISTAR BODEGAS
 # ----------------------------------------------------------
 @login_requerido
 def bodegasData(request):
-    try:
-        headers = get_headers(request)
-        response = requests.get(API_URL, headers=headers)
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
 
-        if response.status_code == 401:
-            messages.error(request, "No autorizado. Debes iniciar sesión nuevamente.")
+    try:
+        res = requests.get(API_URL, headers=headers)
+        if res.status_code == 401:
             return redirect("Login")
 
-        bodegas = response.json()
-
+        bodegas = res.json()
     except Exception as e:
-        print("ERROR LISTANDO:", e)
+        print("ERROR LISTANDO BODEGAS:", e)
         bodegas = []
-        messages.error(request, "No se pudo conectar con la API.")
 
-    return render(request, "templateCrudBodega/bodegas-models.html", {"Bodegas": bodegas})
+    return render(
+        request,
+        "templateCrudBodega/bodegas-models.html",
+        {"Bodegas": bodegas},
+    )
 
 
 # ----------------------------------------------------------
@@ -48,43 +49,40 @@ def bodegasData(request):
 # ----------------------------------------------------------
 @login_requerido
 def bodegasRegistracionView(request):
-
-    # GET → Mostrar el formulario vacío
     if request.method == "GET":
-        return render(request, "templateCrudBodega/registro-bodega.html", {
-            "errores": {},
-            "data": {}
-        })
-
-    # POST → Enviar datos a la API
-    if request.method == "POST":
-        data = {
-            "NombreBodega": request.POST.get("NombreBodega"),
-            "UbicacionBodega": request.POST.get("UbicacionBodega"),
-            "EstadoBodega": request.POST.get("EstadoBodega"),
-            "ObservacionesBodega": request.POST.get("ObservacionesBodega"),
-        }
-
-        headers = get_headers(request)
-        res = requests.post(API_URL, json=data, headers=headers)
-
-        # Si se creó correctamente
-        if res.status_code == 201:
-            messages.success(request, "Bodega registrada correctamente")
-            return redirect("crud-bodega")
-
-        # Si hay errores de validación
-        try:
-            errores = res.json()
-        except:
-            errores = {"general": ["Error desconocido"]}
-
         return render(
             request,
             "templateCrudBodega/registro-bodega.html",
-            {"errores": errores, "data": data}
+            {"errores": {}, "data": {}},
         )
 
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
+    data = {
+        "NombreBodega": request.POST.get("NombreBodega"),
+        "UbicacionBodega": request.POST.get("UbicacionBodega"),
+        "EstadoBodega": request.POST.get("EstadoBodega"),
+        "ObservacionesBodega": request.POST.get("ObservacionesBodega"),
+    }
+
+    try:
+        res = requests.post(API_URL, json=data, headers=headers)
+
+        if res.status_code == 201:
+            return redirect("crud-bodega")
+
+        errores = res.json()
+    except Exception as e:
+        print("ERROR REGISTRANDO:", e)
+        errores = {"general": ["No se pudo conectar con la API"]}
+
+    return render(
+        request,
+        "templateCrudBodega/registro-bodega.html",
+        {"errores": errores, "data": data},
+    )
 
 
 # ----------------------------------------------------------
@@ -92,22 +90,25 @@ def bodegasRegistracionView(request):
 # ----------------------------------------------------------
 @login_requerido
 def detalleBodega(request, IdBodega):
-    try:
-        headers = get_headers(request)
-        response = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
 
-        if response.status_code == 404:
-            messages.error(request, "La bodega no existe.")
+    try:
+        res = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
+        if res.status_code != 200:
             return redirect("crud-bodega")
 
-        bodega = response.json()
-
+        bodega = res.json()
     except Exception as e:
         print("ERROR DETALLE:", e)
-        bodega = None
-        messages.error(request, "No se pudo obtener la información desde la API.")
+        return redirect("crud-bodega")
 
-    return render(request, "templateCrudBodega/detalle-bodega.html", {"bod": bodega})
+    return render(
+        request,
+        "templateCrudBodega/detalle-bodega.html",
+        {"bod": bodega},
+    )
 
 
 # ----------------------------------------------------------
@@ -116,46 +117,43 @@ def detalleBodega(request, IdBodega):
 @login_requerido
 def actualizarBodega(request, IdBodega):
     headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
 
-    # GET → Obtener datos actuales y mostrar en el formulario
     if request.method == "GET":
-        response = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
-        if response.status_code == 200:
-            bodega = response.json()
-        else:
-            messages.error(request, "No se pudo obtener la bodega desde la API.")
+        res = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
+        if res.status_code != 200:
             return redirect("crud-bodega")
-        
-        return render(request, "templateCrudBodega/registro-bodega.html", {
-            "data": bodega,
-            "errores": {}
-        })
 
-    # POST → Enviar datos actualizados a la API
-    if request.method == "POST":
-        data = {
-            "NombreBodega": request.POST.get("NombreBodega"),
-            "UbicacionBodega": request.POST.get("UbicacionBodega"),
-            "EstadoBodega": request.POST.get("EstadoBodega"),
-            "ObservacionesBodega": request.POST.get("ObservacionesBodega"),
-        }
+        return render(
+            request,
+            "templateCrudBodega/registro-bodega.html",
+            {"data": res.json(), "errores": {}},
+        )
 
+    data = {
+        "NombreBodega": request.POST.get("NombreBodega"),
+        "UbicacionBodega": request.POST.get("UbicacionBodega"),
+        "EstadoBodega": request.POST.get("EstadoBodega"),
+        "ObservacionesBodega": request.POST.get("ObservacionesBodega"),
+    }
+
+    try:
         res = requests.put(f"{API_URL}{IdBodega}/", json=data, headers=headers)
 
         if res.status_code in (200, 202):
-            messages.success(request, "Bodega actualizada correctamente")
             return redirect("crud-bodega")
 
-        # Si hay errores de validación
-        try:
-            errores = res.json()
-        except:
-            errores = {"general": ["Error desconocido"]}
+        errores = res.json()
+    except Exception as e:
+        print("ERROR ACTUALIZANDO:", e)
+        errores = {"general": ["No se pudo conectar con la API"]}
 
-        return render(request, "templateCrudBodega/registro-bodega.html", {
-            "data": data,
-            "errores": errores
-        })
+    return render(
+        request,
+        "templateCrudBodega/registro-bodega.html",
+        {"data": data, "errores": errores},
+    )
 
 
 # ----------------------------------------------------------
@@ -163,16 +161,18 @@ def actualizarBodega(request, IdBodega):
 # ----------------------------------------------------------
 @login_requerido
 def confirmarEliminar(request, IdBodega):
-
     headers = get_headers(request)
-    response = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
+    if not headers:
+        return redirect("Login")
 
-    if response.status_code == 200:
-        bodega = response.json()
-    else:
-        bodega = None
+    res = requests.get(f"{API_URL}{IdBodega}/", headers=headers)
+    bodega = res.json() if res.status_code == 200 else None
 
-    return render(request, "templateCrudBodega/confirmar-eliminar.html", {"bod": bodega})
+    return render(
+        request,
+        "templateCrudBodega/confirmar-eliminar.html",
+        {"bod": bodega},
+    )
 
 
 # ----------------------------------------------------------
@@ -180,18 +180,12 @@ def confirmarEliminar(request, IdBodega):
 # ----------------------------------------------------------
 @login_requerido
 def eliminarBodega(request, IdBodega):
-
-    if request.method == "POST":
-
-        headers = get_headers(request)
-        res = requests.delete(f"{API_URL}{IdBodega}/", headers=headers)
-
-        if res.status_code in (200, 204):
-            messages.success(request, "Bodega eliminada correctamente")
-        else:
-            messages.error(request, f"No se pudo eliminar: {res.text}")
-
+    if request.method != "POST":
         return redirect("crud-bodega")
 
-    messages.error(request, "Método no permitido.")
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
+    requests.delete(f"{API_URL}{IdBodega}/", headers=headers)
     return redirect("crud-bodega")

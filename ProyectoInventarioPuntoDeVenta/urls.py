@@ -14,16 +14,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path, include
 from LoginApp.views import renderlogin as Login
 from AdminHomeApp import views as AdminHomeApp
 
 # Lista de rutas principales de la aplicación Django
 urlpatterns = [
-    # Ruta para el panel de administración de Django
-    # Cuando accedes a /admin/ se abre el admin predeterminado de Django
-    path('admin/', admin.site.urls),
 
     # Ruta principal del login
     # Todas las URLs definidas en LoginApp.urls se incluirán aquí

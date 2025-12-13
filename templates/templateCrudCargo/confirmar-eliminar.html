@@ -12,7 +12,7 @@
 <section>
     <h1>¿Seguro que deseas eliminar el cargo: {{ cag.TipoDeCargo }}?</h1>
 
-    {% if request.session.Usuario_Username == "Admin" %}
+    {% if request.COOKIES.username|default:"" == "admin" %}
         <a href="{% url 'admin-crud-cargo' %}">
             <button class="button-header" type="button">Volver</button>
         </a>

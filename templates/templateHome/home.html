@@ -17,7 +17,7 @@
         <img src="{% static 'images/usuario.png' %}" class="crud-user-logo">
         
         <h1>USERNAME:</h1>
-        <h1>{{ Usuario|default:"Desconocido" }}</h1>
+        <h1>{{ Usuario }}</h1>
 
 
         <a href={% url 'Logout' %} class="crud-card cerrar-sesion">

@@ -1,6 +1,5 @@
 import requests
 from django.shortcuts import render, redirect
-from django.contrib import messages
 from LoginApp.decorators import login_requerido
 
 API_URL_PRODUCTOS = "http://127.0.0.1:8000/productos/"
@@ -8,20 +7,29 @@ API_URL_CATEGORIAS = "http://127.0.0.1:8000/categoriaProducto/"
 API_URL_BODEGAS = "http://127.0.0.1:8000/bodegas/"
 
 def get_headers(request):
-    token = request.session.get("token")
-    return {"Authorization": f"Bearer {token}"} if token else {}
+    token = request.COOKIES.get("token")
+    if not token:
+        return None
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
 # ----------------------------
 # LISTAR PRODUCTOS
 # ----------------------------
 @login_requerido
 def productosData(request):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        res = requests.get(API_URL_PRODUCTOS, headers=get_headers(request))
+        res = requests.get(API_URL_PRODUCTOS, headers=headers)
         productos = res.json() if res.status_code == 200 else []
     except:
         productos = []
-        messages.error(request, "No se pudo conectar con la API.")
+
     return render(request, 'templateCrudProducto/productos-models.html', {"Productos": productos})
 
 # ----------------------------
@@ -29,12 +37,15 @@ def productosData(request):
 # ----------------------------
 @login_requerido
 def productosRegistrationView(request):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        Categorias = requests.get(API_URL_CATEGORIAS, headers=get_headers(request)).json()
-        Bodegas = requests.get(API_URL_BODEGAS, headers=get_headers(request)).json()
+        Categorias = requests.get(API_URL_CATEGORIAS, headers=headers).json()
+        Bodegas = requests.get(API_URL_BODEGAS, headers=headers).json()
     except:
         Categorias, Bodegas = [], []
-        messages.error(request, "No se pudieron cargar categorías o bodegas.")
 
     data, errores = {}, {}
 
@@ -59,9 +70,8 @@ def productosRegistrationView(request):
 
         if not errores:
             try:
-                res = requests.post(API_URL_PRODUCTOS, json=data, headers=get_headers(request))
+                res = requests.post(API_URL_PRODUCTOS, json=data, headers=headers)
                 if res.status_code == 201:
-                    messages.success(request, "Producto registrado correctamente")
                     usuario = request.session.get("Usuario_Username")
                     return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')
                 errores.update(res.json())
@@ -76,20 +86,22 @@ def productosRegistrationView(request):
 # ----------------------------
 @login_requerido
 def actualizarProducto(request, IdProducto):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        Categorias = requests.get(API_URL_CATEGORIAS, headers=get_headers(request)).json()
-        Bodegas = requests.get(API_URL_BODEGAS, headers=get_headers(request)).json()
+        Categorias = requests.get(API_URL_CATEGORIAS, headers=headers).json()
+        Bodegas = requests.get(API_URL_BODEGAS, headers=headers).json()
     except:
         Categorias, Bodegas = [], []
-        messages.error(request, "No se pudieron cargar categorías o bodegas.")
 
     if request.method == "GET":
         try:
-            res = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=get_headers(request))
+            res = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=headers)
             data = res.json() if res.status_code == 200 else {}
         except:
             data = {}
-            messages.error(request, "No se pudo cargar el producto.")
         return render(request, 'templateCrudProducto/registro-producto.html',
                       {"data": data, "errores": {}, "Categorias": Categorias, "Bodegas": Bodegas})
 
@@ -114,9 +126,8 @@ def actualizarProducto(request, IdProducto):
 
     if not errores:
         try:
-            res = requests.put(f"{API_URL_PRODUCTOS}{IdProducto}/", json=data, headers=get_headers(request))
+            res = requests.put(f"{API_URL_PRODUCTOS}{IdProducto}/", json=data, headers=headers)
             if res.status_code in (200, 202):
-                messages.success(request, "Producto actualizado correctamente")
                 usuario = request.session.get("Usuario_Username")
                 return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')
             errores.update(res.json())
@@ -132,8 +143,8 @@ def actualizarProducto(request, IdProducto):
 @login_requerido
 def detalleProducto(request, IdProducto):
     headers = get_headers(request)
-    producto = {}
-    Categorias, Bodegas = [], []
+    if not headers:
+        return redirect("Login")
 
     try:
         res_pro = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=headers)
@@ -144,18 +155,23 @@ def detalleProducto(request, IdProducto):
 
         res_bod = requests.get(API_URL_BODEGAS, headers=headers)
         Bodegas = res_bod.json() if res_bod.status_code == 200 else []
-    except Exception as e:
-        messages.error(request, "No se pudo obtener la información desde la API.")
+    except:
+        producto, Categorias, Bodegas = {}, [], []
 
-    return render(request, 'templateCrudProducto/detalle-producto.html', 
+    return render(request, 'templateCrudProducto/detalle-producto.html',
                   {"pro": producto, "Categorias": Categorias, "Bodegas": Bodegas})
+
 # ----------------------------
 # CONFIRMAR ELIMINACIÓN
 # ----------------------------
 @login_requerido
 def confirmarEliminar(request, IdProducto):
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        res = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=get_headers(request))
+        res = requests.get(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=headers)
         producto = res.json() if res.status_code == 200 else None
     except:
         producto = None
@@ -167,18 +183,17 @@ def confirmarEliminar(request, IdProducto):
 @login_requerido
 def eliminarProducto(request, IdProducto):
     if request.method != "POST":
-        messages.error(request, "Método no permitido para eliminar productos.")
         usuario = request.session.get("Usuario_Username")
         return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')
 
+    headers = get_headers(request)
+    if not headers:
+        return redirect("Login")
+
     try:
-        res = requests.delete(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=get_headers(request))
-        if res.status_code in (200, 204):
-            messages.success(request, "Producto eliminado correctamente")
-        else:
-            messages.error(request, f"No se pudo eliminar: {res.text}")
+        requests.delete(f"{API_URL_PRODUCTOS}{IdProducto}/", headers=headers)
     except:
-        messages.error(request, "Error al conectar con la API")
+        pass
 
     usuario = request.session.get("Usuario_Username")
     return redirect('admin-crud-producto' if usuario == "Admin" else 'crud-producto')
