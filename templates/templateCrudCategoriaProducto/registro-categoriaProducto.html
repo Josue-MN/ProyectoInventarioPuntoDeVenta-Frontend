@@ -8,7 +8,7 @@
 {% block header_title %}
 <h1 class="header-title">REGISTRO DE CATEGORÍAS</h1>
 
-{% if request.COOKIES.username|default:"" == "admin" %}
+{% if request.COOKIES.username|default:"" == "Admin" %}
     <a href="{% url 'admin-crud-categoria' %}">
         <button class="button-header" type="button">Volver al Panel Admin</button>
     </a>

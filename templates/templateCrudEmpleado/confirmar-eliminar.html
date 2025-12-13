@@ -13,7 +13,7 @@
 <section>
     <h1>¿Seguro que deseas eliminar el empleado: {{ emp.NombreEmpleado }}?</h1>
 
-    {% if request.COOKIES.username|default:"" == "admin" %}
+    {% if request.COOKIES.username|default:"" == "Admin" %}
         <a href="{% url 'admin-crud-empleado' %}">
             <button class="button-header" type="button">Volver al Panel Admin</button>
         </a>

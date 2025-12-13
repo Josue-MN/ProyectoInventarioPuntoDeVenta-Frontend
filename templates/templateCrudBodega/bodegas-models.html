@@ -16,7 +16,7 @@
 {% block header_title %}
     <h1 class="header-title">LISTA DE BODEGAS</h1>
 
-    {% if request.COOKIES.username|default:"" == "admin" %}
+    {% if request.COOKIES.username|default:"" == "Admin" %}
         <a href="{% url 'adminhome' %}">
             <button class="button-header" type="button">Volver al Panel Admin</button>
         </a>
@@ -54,7 +54,7 @@
                     <td>{{ bod.EstadoBodega }}</td>
 
                     <td>
-                        {% if request.COOKIES.username|default:"" == "admin" %}
+                        {% if request.COOKIES.username|default:"" == "Admin" %}
                             <a href="{% url 'admin-detalle-bodega' bod.IdBodega %}"><button class="button-header">DETALLE</button></a>
                             <a href="{% url 'admin-actualizar-bodega' bod.IdBodega %}"><button class="button-header">ACTUALIZAR</button></a>
                             <a href="{% url 'admin-confirmar-eliminar-bodega' bod.IdBodega %}"><button class="button-header">ELIMINAR</button></a>

@@ -13,7 +13,7 @@
 <section>
     <h1>¿Seguro que deseas eliminar la categoría: {{ bod.NombreCategoria }}?</h1>
 
-    {% if request.COOKIES.username|default:"" == "admin" %}
+    {% if request.COOKIES.username|default:"" == "Admin" %}
         <a href="{% url 'admin-crud-categoria' %}">
             <button class="button-header" type="button">Volver al Panel Admin</button>
         </a>

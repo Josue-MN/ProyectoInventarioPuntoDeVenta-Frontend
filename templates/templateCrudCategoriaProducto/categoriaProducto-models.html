@@ -18,7 +18,7 @@
     <!-- Título principal de la página y botones de navegación -->
     <h1 class="header-title">LISTA DE CATEGORÍAS</h1>
 
-    {% if request.COOKIES.username|default:"" == "admin" %}
+    {% if request.COOKIES.username|default:"" == "Admin" %}
         <a href="{% url 'adminhome' %}">
             <button class="button-header" type="button">Volver al Panel Admin</button>
         </a>
@@ -56,7 +56,7 @@
                     <td>{{ bod.Descripcion }}</td>
                     <td>{{ bod.Estado }}</td>
                     <td>
-                        {% if request.COOKIES.username|default:"" == "admin" %}
+                        {% if request.COOKIES.username|default:"" == "Admin" %}
                             <a href="{% url 'admin-detalle-categoria' bod.IdCategoriaProducto %}">
                                 <button class="button-header" type="button">DETALLE</button>
                             </a>
