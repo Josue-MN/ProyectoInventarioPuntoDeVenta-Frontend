@@ -35,9 +35,9 @@
         <td>{{ item.IdAuditoriaBodega }}</td>
         <td>{{ item.BodegaIdRespaldo }}</td>
         <td>{{ item.BodegaNombreRespaldo }}</td>
-        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Usuario }}</td>
         <td>{{ item.Accion }}</td>
-        <td>{{ item.Fecha_hora }}</td>
+        <td>{{ item.Fecha_hora|slice:":10" }}</td>
     </tr>
     {% empty %}
     <tr><td colspan="6">Sin registros</td></tr>
@@ -62,9 +62,9 @@
         <td>{{ item.IdAuditoriaCargo }}</td>
         <td>{{ item.CargoIdRespaldo }}</td>
         <td>{{ item.CargoNombreRespaldo }}</td>
-        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Usuario }}</td>
         <td>{{ item.Accion }}</td>
-        <td>{{ item.Fecha_hora }}</td>
+        <td>{{ item.Fecha_hora|slice:":10" }}</td>
     </tr>
     {% empty %}
     <tr><td colspan="6">Sin registros</td></tr>
@@ -89,9 +89,9 @@
         <td>{{ item.IdAuditoriaCategoria }}</td>
         <td>{{ item.CategoriaIdRespaldo }}</td>
         <td>{{ item.CategoriaNombreRespaldo }}</td>
-        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Usuario }}</td>
         <td>{{ item.Accion }}</td>
-        <td>{{ item.Fecha_hora }}</td>
+        <td>{{ item.Fecha_hora|slice:":10" }}</td>
     </tr>
     {% empty %}
     <tr><td colspan="6">Sin registros</td></tr>
@@ -116,9 +116,9 @@
         <td>{{ item.IdAuditoriaEmpleado }}</td>
         <td>{{ item.EmpleadoIdRespaldo }}</td>
         <td>{{ item.EmpleadoNombreRespaldo }}</td>
-        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Usuario }}</td>
         <td>{{ item.Accion }}</td>
-        <td>{{ item.Fecha_hora }}</td>
+        <td>{{ item.Fecha_hora|slice:":10" }}</td>
     </tr>
     {% empty %}
     <tr><td colspan="6">Sin registros</td></tr>
@@ -143,9 +143,9 @@
         <td>{{ item.IdAuditoriaProducto }}</td>
         <td>{{ item.ProductoIdRespaldo }}</td>
         <td>{{ item.ProductoNombreRespaldo }}</td>
-        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Usuario }}</td>
         <td>{{ item.Accion }}</td>
-        <td>{{ item.Fecha_hora }}</td>
+        <td>{{ item.Fecha_hora|slice:":10" }}</td>
     </tr>
     {% empty %}
     <tr><td colspan="6">Sin registros</td></tr>
@@ -170,9 +170,9 @@
         <td>{{ item.IdAuditoriaUsuario }}</td>
         <td>{{ item.UsuarioIdRespaldo }}</td>
         <td>{{ item.UsuarioNombreRespaldo }}</td>
-        <td>{{ item.UsuarioUsername|default:"-" }}</td>
+        <td>{{ item.Usuario }}</td>
         <td>{{ item.Accion }}</td>
-        <td>{{ item.Fecha_hora }}</td>
+        <td>{{ item.Fecha_hora|slice:":10" }}</td>
     </tr>
     {% empty %}
     <tr><td colspan="6">Sin registros</td></tr>
